@@ -10,6 +10,8 @@ use rustc_hash::FxHashMap;
 use wasm_encoder as we;
 use wasm_encoder::Encode;
 
+use we::ConstExpr;
+
 use crate::*;
 
 /// Add marker types for type-safe `Idx<T>` for the low-level binary format.
@@ -22,6 +24,7 @@ mod marker {
         pub struct Global;
         pub struct Table;
         pub struct Memory;
+        pub struct Element;
     }
 }
 
@@ -38,6 +41,7 @@ struct EncodeState {
     global_idx: IntMap<Idx<Global>, Idx<marker::we::Global>>,
     table_idx: IntMap<Idx<Table>, Idx<marker::we::Table>>,
     memory_idx: IntMap<Idx<Memory>, Idx<marker::we::Memory>>,
+    element_idx: IntMap<Idx<Element>, Idx<marker::we::Element>>,
 
     last_encoded_section: Option<SectionId>,
     custom_sections_encoded: usize,
@@ -93,6 +97,13 @@ impl EncodeState {
         memory_idx,
         Memory,
         "memory"
+    );
+    encode_state_idx_fns!(
+        insert_element_idx,
+        map_element_idx,
+        element_idx,
+        Element,
+        "element"
     );
     encode_state_idx_fns!(
         insert_global_idx,
@@ -237,7 +248,7 @@ fn encode_imports(module: &Module, state: &mut EncodeState) -> we::ImportSection
         state.get_or_insert_type(f.type_).to_u32()
     });
     add_imports!(tables, insert_table_idx, Table, |t: &Table| {
-        we::TableType::from(t.limits)
+        get_tabletype_from_table(t)
     });
     add_imports!(memories, insert_memory_idx, Memory, |m: &Memory| {
         we::MemoryType::from(m.limits)
@@ -327,28 +338,40 @@ fn encode_tables(
 
     for (hl_table_idx, table) in module.tables() {
         let ll_table_idx = if table.import.is_none() {
-            table_section.table(we::TableType::from(table.limits));
+            table_section.table(get_tabletype_from_table(table));
             state.insert_table_idx(hl_table_idx)
         } else {
             state.map_table_idx(hl_table_idx)?
         };
 
-        for hl_element in &table.elements {
-            // `wasm-encoder` uses None as the table index to signify the MVP binary format.
-            // Use that whenever possible, to avoid producing a binary using extensions.
-            let ll_table_idx = if ll_table_idx.to_u32() == 0 {
-                None
-            } else {
-                Some(ll_table_idx.to_u32())
+        for (hl_element_idx, element) in module.elements() {
+            state.insert_element_idx(hl_element_idx);
+            let element_type = match element.typ {
+                RefType::FuncRef => we::ValType::FuncRef,
+                RefType::ExternRef => we::ValType::ExternRef,
             };
-            let ll_offset = encode_single_instruction_with_end(&hl_element.offset, state)?;
-            let ll_elements = hl_element
-                .functions
+            let expr = element
+                .init
                 .iter()
-                .map(|function_idx| state.map_function_idx(*function_idx).map(Idx::to_u32))
-                .collect::<Result<Vec<u32>, _>>()?;
-            let ll_elements = we::Elements::Functions(ll_elements.as_slice());
-            element_section.active(ll_table_idx, &ll_offset, we::ValType::FuncRef, ll_elements);
+                .map(|instrs| -> Result<ConstExpr, EncodeError> {
+                    Ok(encode_single_instruction_with_end(instrs, state)?)
+                })
+                .map(|expr| expr.map_err(|e| e.into()))
+                .collect::<Result<Vec<ConstExpr>, EncodeError>>()?;
+            let elements = we::Elements::Expressions(&expr);
+            match &element.mode {
+                ElementMode::Passive => element_section.passive(element_type, elements),
+                ElementMode::Active { table, offset } => {
+                    let ll_offset = encode_single_instruction_with_end(&offset, state)?;
+                    element_section.active(
+                        Some(state.map_table_idx(*table)?.to_u32()),
+                        &ll_offset,
+                        element_type,
+                        elements,
+                    )
+                }
+                ElementMode::Declarative => element_section.declared(element_type, elements),
+            };
         }
     }
 
@@ -771,6 +794,18 @@ impl From<Limits> for we::MemoryType {
             memory64: false,
             shared: false,
         }
+    }
+}
+
+fn get_tabletype_from_table(t: &Table) -> we::TableType {
+    let element_type = match t.ref_type {
+        RefType::FuncRef => we::ValType::FuncRef,
+        RefType::ExternRef => we::ValType::ExternRef,
+    };
+    we::TableType {
+        element_type,
+        minimum: t.limits.initial_size,
+        maximum: t.limits.max_size,
     }
 }
 

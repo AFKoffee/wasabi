@@ -96,14 +96,18 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                                 import_name,
                             ),
                         ),
-                        wp::TypeRef::Table(ty) => module.tables.push(
-                            // Same issue regarding `import_offset`.
-                            Table::new_imported(
-                                parse_table_ty(ty, import_offset)?,
-                                import_module,
-                                import_name,
-                            ),
-                        ),
+                        wp::TypeRef::Table(ty) => {
+                            let (limits, ref_type) = parse_table_ty(ty, import_offset)?;
+                            module.tables.push(
+                                // Same issue regarding `import_offset`.
+                                Table::new_imported(
+                                    limits,
+                                    ref_type,
+                                    import_module,
+                                    import_name,
+                                ),
+                            )
+                        },
                         wp::TypeRef::Memory(ty) => {
                             // Same issue regarding `import_offset`.
                             module.memories.push(Memory::new_imported(
@@ -145,9 +149,9 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
 
                 for elem in reader.into_iter_with_offsets() {
                     let (offset, table_ty) = elem?;
-                    let table_ty = parse_table_ty(table_ty, offset)?;
+                    let (limits, ref_type) = parse_table_ty(table_ty, offset)?;
                     // Fill in the elements of the table later with the element section.
-                    module.tables.push(Table::new(table_ty));
+                    module.tables.push(Table::new(limits, ref_type));
                 }
             }
             wp::Payload::MemorySection(reader) => {
@@ -257,17 +261,38 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
 
                 for elem in reader.into_iter_with_offsets() {
                     let (element_offset, element) = elem?;
-                    parse_elem_ty(element.ty, element_offset)?;
+                    let refty = parse_elem_ty(element.ty, element_offset)?;
 
-                    let items = match element.items {
-                        wp::ElementItems::Functions(items_reader) => items_reader
-                            .into_iter()
-                            .map(|func_idx| func_idx.map(|func_idx| u32_to_usize(func_idx).into()))
-                            .collect::<Result<Vec<Idx<Function>>, _>>()?,
-                        wp::ElementItems::Expressions(reader) => Err(ParseIssue::unsupported(
-                            reader.original_position(),
-                            WasmExtension::ReferenceTypes,
-                        ))?,
+                    let items: Vec<Expr> = match element.items {
+                        wp::ElementItems::Functions(items_reader) => {
+                            let mut offset_instrs = Vec::new();
+                            items_reader.into_iter().for_each(|func_idx| {
+                                if let Ok(func_idx) = func_idx {
+                                    offset_instrs.push(Instr::RefFunc(func_idx.into()));
+                                    offset_instrs.push(Instr::End)
+                                }
+                            });
+                            offset_instrs.chunks(2).map(|x| x.to_vec()).collect()
+                        }
+                        wp::ElementItems::Expressions(items_reader) => {
+                            let mut offset_instrs = Vec::new();
+                            items_reader.into_iter().for_each(|const_expr| {
+                                if let Ok(const_expr) = const_expr {
+                                    for op_offset in
+                                        const_expr.get_operators_reader().into_iter_with_offsets()
+                                    {
+                                        if let Ok((op, offset)) = op_offset {
+                                            let value = match parse_instr(op, offset, &types, &metadata) {
+                                                Ok(it) => it,
+                                                Err(_) => return,
+                                            };
+                                            offset_instrs.push(value)
+                                        }
+                                    }
+                                }
+                            });
+                            offset_instrs.chunks(2).map(|x| x.to_vec()).collect()
+                        }
                     };
 
                     match element.kind {
@@ -1242,12 +1267,15 @@ fn parse_memory_ty(ty: wp::MemoryType, offset: usize) -> Result<Limits, ParseErr
     })
 }
 
-fn parse_table_ty(ty: wp::TableType, offset: usize) -> Result<Limits, ParseError> {
-    parse_elem_ty(ty.element_type, offset)?;
-    Ok(Limits {
-        initial_size: ty.initial,
-        max_size: ty.maximum,
-    })
+fn parse_table_ty(ty: wp::TableType, offset: usize) -> Result<(Limits, RefType), ParseError> {
+    let refty = parse_elem_ty(ty.element_type, offset)?;
+    Ok((
+        Limits {
+            initial_size: ty.initial,
+            max_size: ty.maximum,
+        },
+        refty,
+    ))
 }
 
 fn parse_elem_ty(ty: wp::ValType, offset: usize) -> Result<RefType, ParseError> {

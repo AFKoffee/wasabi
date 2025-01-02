@@ -337,9 +337,10 @@ pub struct Module {
     pub functions: Vec<Function>,
     pub globals: Vec<Global>,
 
-    // TODO make these options to ensure there is only a single one of each
     pub tables: Vec<Table>,
     pub memories: Vec<Memory>,
+
+    pub elements: Vec<Element>,
 
     pub start: Option<Idx<Function>>,
 
@@ -453,8 +454,8 @@ pub struct Global {
 pub struct Table {
     pub limits: Limits,
     // Unlike functions and globals, an imported table can still be initialized with elements.
+    pub ref_type: RefType,
     pub import: Option<(String, String)>,
-    pub elements: Vec<Element>,
     pub export: Vec<String>,
 }
 
@@ -504,8 +505,16 @@ pub struct ParamRef<'a> {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct Element {
-    pub offset: Expr,
-    pub functions: Vec<Idx<Function>>,
+    pub typ: RefType,
+    pub init: Vec<Expr>,
+    pub mode: ElementMode
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum ElementMode {
+    Passive,
+    Active {table: Idx<Table>, offset: Expr},
+    Declarative,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
@@ -736,6 +745,8 @@ pub enum Instr {
     Call(Idx<Function>),
     // TODO: remove Idx<Table>, always 0 in MVP.
     CallIndirect(FunctionType, Idx<Table>),
+
+    RefFunc(Idx<Function>),
 
     // TODO: Include the type explicitly in the instruction to remove
     // value-polymorphism.
@@ -1803,6 +1814,10 @@ impl Module {
         self.memories.iter().enumerate().map(|(i, m)| (i.into(), m))
     }
 
+    pub fn elements(&self) -> impl Iterator<Item = (Idx<Element>, &Element)> {
+        self.elements.iter().enumerate().map(|(i, t)| (i.into(), t))
+    }
+
     // Convenient accessors of functions for the typed, high-level index.
     // TODO Add the same for globals, tables, and memories, if needed.
 
@@ -1820,6 +1835,14 @@ impl Module {
 
     pub fn global_mut(&mut self, idx: Idx<Global>) -> &mut Global {
         &mut self.globals[idx.to_usize()]
+    }
+
+    pub fn table(&self, idx: Idx<Table>) -> &Table {
+        &self.tables[idx.to_usize()]
+    }
+
+    pub fn table_mut(&self, idx: Idx<Table>) -> &mut Table {
+        &mut self.tables[idx.to_usize()]
     }
 
     pub fn add_function(
@@ -2203,20 +2226,25 @@ impl Global {
 }
 
 impl Table {
-    pub fn new(limits: Limits) -> Table {
+    pub fn new(limits: Limits, ref_type: RefType) -> Table {
         Table {
             limits,
+            ref_type,
             import: None,
-            elements: Vec::new(),
             export: Vec::new(),
         }
     }
 
-    pub fn new_imported(limits: Limits, import_module: String, import_name: String) -> Table {
+    pub fn new_imported(
+        limits: Limits, 
+        ref_type: RefType,
+        import_module: String, 
+        import_name: String
+    ) -> Table {
         Table {
             limits,
+            ref_type,
             import: Some((import_module, import_name)),
-            elements: Vec::new(),
             export: Vec::new(),
         }
     }
