@@ -59,6 +59,9 @@ impl Val {
             ValType::I64 => Val::I64(str.parse().map_err(|_| ())?),
             ValType::F32 => Val::F32(str.parse().map_err(|_| ())?),
             ValType::F64 => Val::F64(str.parse().map_err(|_| ())?),
+            // reference type can not be parsed into simple value
+            ValType::Ref(_) => return Err(()),
+            
         })
     }
 }
@@ -82,6 +85,15 @@ pub enum ValType {
     I64,
     F32,
     F64,
+    // Introduce Reference type as a new kind of value type
+    Ref(RefType)
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RefType {
+    FuncRef,
+    ExternRef
 }
 
 #[test]
@@ -97,6 +109,8 @@ impl ValType {
             ValType::I64 => Val::I64(0),
             ValType::F32 => Val::F32(OrderedFloat(0.0)),
             ValType::F64 => Val::F64(OrderedFloat(0.0)),
+            ValType::Ref(_) => panic!("Reference Types do not have a zero!"),
+            
         }
     }
 
@@ -108,6 +122,8 @@ impl ValType {
             ValType::I64 => "i64",
             ValType::F32 => "f32",
             ValType::F64 => "f64",
+            ValType::Ref(RefType::ExternRef) => "externref",
+            ValType::Ref(RefType::FuncRef) => "funcref",
         }
     }
 
@@ -120,6 +136,8 @@ impl ValType {
             ValType::I64 => 'I',
             ValType::F32 => 'f',
             ValType::F64 => 'F',
+            ValType::Ref(RefType::ExternRef) => 'E',
+            ValType::Ref(RefType::FuncRef) => 'F',
         }
     }
 

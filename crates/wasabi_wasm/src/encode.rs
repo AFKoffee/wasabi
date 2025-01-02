@@ -782,6 +782,8 @@ impl From<ValType> for we::ValType {
             I64 => we::ValType::I64,
             F32 => we::ValType::F32,
             F64 => we::ValType::F64,
+            Ref(RefType::ExternRef) => we::ValType::ExternRef,
+            Ref(RefType::FuncRef) => we::ValType::FuncRef
         }
     }
 }

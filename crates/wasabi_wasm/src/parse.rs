@@ -1250,7 +1250,7 @@ fn parse_table_ty(ty: wp::TableType, offset: usize) -> Result<Limits, ParseError
     })
 }
 
-fn parse_elem_ty(ty: wp::ValType, offset: usize) -> Result<(), ParseError> {
+fn parse_elem_ty(ty: wp::ValType, offset: usize) -> Result<RefType, ParseError> {
     use wp::ValType::*;
     match ty {
         I32 | I64 | F32 | F64 => Err(ParseIssue::message(
@@ -1263,11 +1263,8 @@ fn parse_elem_ty(ty: wp::ValType, offset: usize) -> Result<(), ParseError> {
             "only reftypes, not value types are allowed as table elements",
             None,
         ))?,
-        FuncRef => Ok(()),
-        ExternRef => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ReferenceTypes,
-        ))?,
+        FuncRef => Ok(RefType::FuncRef),
+        ExternRef => Ok(RefType::ExternRef),
     }
 }
 
@@ -1326,14 +1323,8 @@ fn parse_val_ty(ty: wp::ValType, offset: usize) -> Result<ValType, ParseError> {
         wp::ValType::F32 => Ok(ValType::F32),
         wp::ValType::F64 => Ok(ValType::F64),
         wp::ValType::V128 => Err(ParseIssue::unsupported(offset, WasmExtension::Simd))?,
-        wp::ValType::FuncRef => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ReferenceTypes,
-        ))?,
-        wp::ValType::ExternRef => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ReferenceTypes,
-        ))?,
+        wp::ValType::FuncRef => Ok(ValType::Ref(RefType::FuncRef)),
+        wp::ValType::ExternRef => Ok(ValType::Ref(RefType::ExternRef)),
     }
 }
 
