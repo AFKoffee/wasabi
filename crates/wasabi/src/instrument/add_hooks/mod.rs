@@ -328,7 +328,7 @@ pub fn add_hooks(
                                 location.0,
                                 Const(Val::I32(-1)),
                             ]);
-                            restore_locals_with_i64_handling(&mut instrumented_body, result_tmps, function);
+                            restore_locals_with_i64_handling(&mut instrumented_body, result_tmps);
                             instrumented_body.push(hooks.instr(&Return, result_tys));
                         }
                     }
@@ -465,7 +465,7 @@ pub fn add_hooks(
                             location.0,
                             location.1,
                         ]);
-                        restore_locals_with_i64_handling(&mut instrumented_body, result_tmps, function);
+                        restore_locals_with_i64_handling(&mut instrumented_body, result_tmps);
                         instrumented_body.push(hooks.instr(&instr, result_tys));
                     }
 
@@ -496,7 +496,7 @@ pub fn add_hooks(
                             location.1.clone(),
                             target_func_idx.to_const(),
                         ]);
-                        restore_locals_with_i64_handling(&mut instrumented_body, arg_tmps, function);
+                        restore_locals_with_i64_handling(&mut instrumented_body, arg_tmps);
                         instrumented_body.extend_from_slice(&[
                             hooks.instr(&instr, func_ty.inputs()),
                             instr,
@@ -511,7 +511,7 @@ pub fn add_hooks(
                             location.0,
                             location.1,
                         ]);
-                        restore_locals_with_i64_handling(&mut instrumented_body, result_tmps, function);
+                        restore_locals_with_i64_handling(&mut instrumented_body, result_tmps);
                         instrumented_body.push(hooks.call_post(func_ty.results()))
                     } else {
                         instrumented_body.push(instr);
@@ -534,7 +534,7 @@ pub fn add_hooks(
                             location.1.clone(),
                             Local(Get, target_table_idx_tmp),
                         ]);
-                        restore_locals_with_i64_handling(&mut instrumented_body, arg_tmps, function);
+                        restore_locals_with_i64_handling(&mut instrumented_body, arg_tmps);
                         instrumented_body.extend_from_slice(&[
                             hooks.instr(&instr, func_ty.inputs()),
                             instr.clone(),
@@ -549,7 +549,7 @@ pub fn add_hooks(
                             location.0,
                             location.1,
                         ]);
-                        restore_locals_with_i64_handling(&mut instrumented_body, result_tmps, function);
+                        restore_locals_with_i64_handling(&mut instrumented_body, result_tmps);
                         instrumented_body.push(hooks.call_post(func_ty.results()));
                     } else {
                         instrumented_body.push(instr.clone());
@@ -583,7 +583,7 @@ pub fn add_hooks(
                     assert_eq!(type_stack.pop_val(), ty, "select arguments should have same type");
                     type_stack.push_val(ty);
 
-                    if enabled_hooks.contains(Hook::Drop) {
+                    if enabled_hooks.contains(Hook::Select) {
                         let condition_tmp = function.add_fresh_local(I32);
                         let arg_tmps = function.add_fresh_locals(&[ty, ty]);
 
@@ -594,7 +594,7 @@ pub fn add_hooks(
                             location.1,
                             Local(Get, condition_tmp),
                         ]);
-                        restore_locals_with_i64_handling(&mut instrumented_body, arg_tmps, function);
+                        restore_locals_with_i64_handling(&mut instrumented_body, arg_tmps);
                         // replace select with hook call
                         instrumented_body.push(hooks.instr(&instr, &[ty, ty]));
                     } else {
@@ -602,6 +602,30 @@ pub fn add_hooks(
                     }
                 }
 
+                TypedSelect(ty) => {
+                    assert_eq!(type_stack.pop_val(), I32, "select condition should be i32");
+                    assert_eq!(type_stack.pop_val(), ty, "select argument should match given ty");
+                    assert_eq!(type_stack.pop_val(), ty, "select argument should match given ty");
+                    type_stack.push_val(ty);
+
+                    if enabled_hooks.contains(Hook::Select) {
+                        let condition_tmp = function.add_fresh_local(I32);
+                        let arg_tmps = function.add_fresh_locals(&[ty, ty]);
+
+                        save_stack_to_locals(&mut instrumented_body, &[arg_tmps[0], arg_tmps[1], condition_tmp]);
+                        instrumented_body.extend_from_slice(&[
+                            instr.clone(),
+                            location.0,
+                            location.1,
+                            Local(Get, condition_tmp),
+                        ]);
+                        restore_locals_with_i64_handling(&mut instrumented_body, arg_tmps);
+                        // replace select with hook call
+                        instrumented_body.push(hooks.instr(&instr, &[ty, ty]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
 
                 /* Variable Instructions */
 
@@ -701,7 +725,7 @@ pub fn add_hooks(
                             Const(Val::I32(memarg.offset as i32)),
                             Const(Val::I32(memarg.alignment_exp as i32)),
                         ]);
-                        restore_locals_with_i64_handling(&mut instrumented_body, [addr_tmp, value_tmp], function);
+                        restore_locals_with_i64_handling(&mut instrumented_body, [addr_tmp, value_tmp]);
                         instrumented_body.push(hooks.instr(&instr, &[]));
                     } else {
                         instrumented_body.push(instr);
@@ -723,7 +747,7 @@ pub fn add_hooks(
                             Const(Val::I32(memarg.offset as i32)),
                             Const(Val::I32(memarg.alignment_exp as i32)),
                         ]);
-                        restore_locals_with_i64_handling(&mut instrumented_body, [addr_tmp, value_tmp], function);
+                        restore_locals_with_i64_handling(&mut instrumented_body, [addr_tmp, value_tmp]);
                         instrumented_body.push(hooks.instr(&instr, &[]));
                     } else {
                         instrumented_body.push(instr);
@@ -764,7 +788,7 @@ pub fn add_hooks(
                             location.0,
                             location.1,
                         ]);
-                        restore_locals_with_i64_handling(&mut instrumented_body, input_tmps.iter().chain( result_tmps.iter()).copied(), function);
+                        restore_locals_with_i64_handling(&mut instrumented_body, input_tmps.iter().chain( result_tmps.iter()).copied());
                         instrumented_body.push(hooks.instr(&instr, &[]));
                     } else {
                         instrumented_body.push(instr);

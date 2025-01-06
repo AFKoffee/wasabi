@@ -519,6 +519,7 @@ fn encode_instruction(
 
         Instr::Drop => we::Instruction::Drop,
         Instr::Select => we::Instruction::Select,
+        Instr::TypedSelect(ty) => we::Instruction::TypedSelect(ty.into()),
 
         Instr::Local(LocalOp::Get, local_idx) => we::Instruction::LocalGet(local_idx.to_u32()),
         Instr::Local(LocalOp::Set, local_idx) => we::Instruction::LocalSet(local_idx.to_u32()),

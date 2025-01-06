@@ -214,7 +214,7 @@ impl HookMap {
                 let js_args = &args[0].to_lowlevel_long_expr();
                 Hook::new(ll_name, args, "drop", js_args)
             }
-            Select => {
+            Select | TypedSelect(_) => {
                 assert_eq!(polymorphic_tys.len(), 2, "select has two polymorphic arguments");
                 assert_eq!(polymorphic_tys[0], polymorphic_tys[1], "select arguments must be equal");
                 let args = args!(condition: I32, input0: polymorphic_tys[0], input1: polymorphic_tys[1]);
@@ -266,6 +266,7 @@ impl HookMap {
                 let js_args = &format!("\"{}\", {}", instr_name, args.iter().map(Arg::to_lowlevel_long_expr).collect::<Vec<_>>().join(", "));
                 Hook::new(ll_name, args, "ref.is_null", js_args)
             }
+
             RefFunc(_) | RefNull(_) => todo!("instrumentation not supported!")
             }
         };

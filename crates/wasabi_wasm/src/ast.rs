@@ -756,6 +756,7 @@ pub enum Instr {
     Drop,
     // TODO: Replace with `If([ty, ty] -> [ty], ...)
     Select,
+    TypedSelect(ValType),
 
     // TODO: Get rid of all locals by using block params and results only + a pick or copy
     // instruction, that copies the nth value on the stack to the top.
@@ -1582,7 +1583,7 @@ impl Instr {
             CallIndirect(_, _) => "call_indirect",
 
             Drop => "drop",
-            Select => "select",
+            Select | TypedSelect(_) => "select",
 
             Local(LocalOp::Get, _) => "local.get",
             Local(LocalOp::Set, _) => "local.set",
@@ -1629,6 +1630,7 @@ impl Instr {
                 func_ty.inputs().iter().copied().chain(std::iter::once(I32)),
                 func_ty.results().iter().copied(),
             )),
+            TypedSelect(t) => Some(FunctionType::new(&[t, t, I32], &[t])),
 
             // Difficult because of nesting and block types.
             Block(_) | Loop(_) | If(_) | Else | End => None,
@@ -1787,6 +1789,7 @@ impl fmt::Display for Instr {
             }
 
             Const(val) => write!(f, " {val}"),
+            TypedSelect(ty) => write!(f, " {ty:?}"),
 
             RefNull(ty) => write!(f, "{ty:?}"),
             RefFunc(idx) => write!(f, "{idx:?}"),

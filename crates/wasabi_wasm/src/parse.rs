@@ -644,10 +644,7 @@ fn parse_instr(
         wp::Drop => Drop,
         wp::Select => Select,
 
-        wp::TypedSelect { ty: _ } => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ReferenceTypes,
-        ))?,
+        wp::TypedSelect { ty } => TypedSelect(parse_val_ty(ty, offset)?),
 
         wp::LocalGet { local_index } => Local(LocalOp::Get, local_index.into()),
         wp::LocalSet { local_index } => Local(LocalOp::Set, local_index.into()),

@@ -856,6 +856,7 @@ fn check_instr(
             let ty2 = state.pop_val()?;
             let ty = ty1.join(ty2)
                 .ok_or_else(|| TypeError::from(format!("incompatible types {ty1} and {ty2} for select arguments")))?;
+            // TODO: Check for reftypes. Select instruction is invalid for them.
             state.push_val(ty)?;
             match (ValType::try_from(ty), was_unreachable) {
                 (_, true) => InferredInstructionType::Unreachable,
