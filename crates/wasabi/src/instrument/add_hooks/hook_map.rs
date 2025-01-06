@@ -259,7 +259,7 @@ impl HookMap {
 
             Block(_) | Loop(_) | Else | End => panic!("cannot get hook for block-type instruction with this method, please use the other methods specialized to the block type"),
             
-            RefFunc(_) => todo!("instrumentation not supported!")
+            RefFunc(_) | RefIsNull | RefNull(_) => todo!("instrumentation not supported!")
             }
         };
 

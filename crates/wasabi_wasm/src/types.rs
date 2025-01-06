@@ -840,6 +840,16 @@ fn check_instr(
                 (Err(UnconstrainedTypeError), false) => unreachable!("unconstrained value type should never appear in reachable code"),
             }
         }
+        RefIsNull => {
+            let ty = state.pop_val()?;
+            state.push_val(InferredValType::from(ValType::I32))?;
+            match (ValType::try_from(ty), was_unreachable) {
+                (_, true) => InferredInstructionType::Unreachable,
+                (Ok(ValType::Ref(refty)), false) => InferredInstructionType::Reachable(FunctionType::new(&[ValType::Ref(refty)], &[ValType::I32])),
+                (Ok(ty), false) => return Err(TypeError::from(format!("ref.isnull is valid only for ref types, but not {ty}"))),
+                (Err(UnconstrainedTypeError), false) => unreachable!("unconstrained value type should never appear in reachable code"),
+            }
+        }
         Select => {
             state.pop_val_expected(ValType::I32)?;
             let ty1 = state.pop_val()?;

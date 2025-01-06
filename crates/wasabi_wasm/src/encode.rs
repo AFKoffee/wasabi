@@ -697,6 +697,11 @@ fn encode_instruction(
         Instr::Binary(BinaryOp::F64Max) => we::Instruction::F64Max,
         Instr::Binary(BinaryOp::F64Copysign) => we::Instruction::F64Copysign,
         
+        Instr::RefNull(ty) => we::Instruction::RefNull(match ty {
+            RefType::FuncRef => we::ValType::FuncRef,
+            RefType::ExternRef => we::ValType::ExternRef,
+        }),
+        Instr::RefIsNull => we::Instruction::RefIsNull,
         Instr::RefFunc(idx) => we::Instruction::RefFunc(
             state.map_function_idx(idx)?.to_u32()
         ),

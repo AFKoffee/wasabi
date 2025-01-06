@@ -770,10 +770,37 @@ pub fn add_hooks(
                         instrumented_body.push(instr);
                     }
                 },
+                RefIsNull => {
+                    let ty = type_stack.pop_val();
+                    let t = match ty {
+                        ValType::Ref(refty) => refty,
+                        _ => panic!("ref.is_null on non-ref type {:?}", ty)
+                    };
+                    type_stack.push_val(I32);
+
+                    if enabled_hooks.contains(Hook::RefIsNull) {
+                        let result_tmp = function.add_fresh_local(I32);
+
+                        instrumented_body.extend_from_slice(&[
+                            instr.clone(),
+                            Local(Tee, result_tmp),
+                            location.0,
+                            location.1,
+                            Local(Get, result_tmp),
+                            hooks.instr(&instr, &[ValType::Ref(t)])
+                        ]);
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                },
+                RefNull(ty) => {
+                    type_stack.push_val(ValType::Ref(ty));
+                    instrumented_body.push(instr.clone());
+                },
                 RefFunc(_) => {
                     type_stack.push_val(ValType::Ref(RefType::FuncRef)); // TODO: Why not use instr.simple_type() here?
                     instrumented_body.push(instr.clone());
-                }
+                },
             }
         }
 

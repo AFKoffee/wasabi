@@ -630,14 +630,9 @@ fn parse_instr(
             table_index,
             table_byte,
         } => {
-            if table_index != 0 {
-                Err(ParseIssue::unsupported(
-                    offset,
-                    WasmExtension::ReferenceTypes,
-                ))?
-            }
+            let table_idx = if table_index != 0 { table_index } else { 0 };
             assert!(table_byte == 0, "not sure which extension this is");
-            CallIndirect(types.get(type_index, offset + 1)?, 0usize.into())
+            CallIndirect(types.get(type_index, offset + 1)?, table_idx.into())
         }
 
         wp::ReturnCall { function_index: _ }
@@ -708,9 +703,9 @@ fn parse_instr(
         wp::F32Const { value } => Const(Val::F32(OrderedFloat(f32::from_bits(value.bits())))),
         wp::F64Const { value } => Const(Val::F64(OrderedFloat(f64::from_bits(value.bits())))),
 
-        wp::RefNull { ty: _ } | wp::RefIsNull | wp::RefFunc { function_index: _ } => Err(
-            ParseIssue::unsupported(offset, WasmExtension::ReferenceTypes),
-        )?,
+        wp::RefNull { ty} => RefNull(parse_elem_ty(ty, offset)?),
+        wp::RefIsNull => RefIsNull,
+        wp::RefFunc { function_index } => RefFunc(function_index.into()),
 
         wp::I32Eqz => Unary(UnaryOp::I32Eqz),
         wp::I64Eqz => Unary(UnaryOp::I64Eqz),

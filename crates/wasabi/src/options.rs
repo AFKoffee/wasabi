@@ -102,6 +102,8 @@ pub enum Hook {
 
     Local,
     Global,
+    
+    RefIsNull,
 }
 
 // Use serde_plain for parsing strings to enum variants.

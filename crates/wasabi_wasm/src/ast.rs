@@ -746,6 +746,8 @@ pub enum Instr {
     // TODO: remove Idx<Table>, always 0 in MVP.
     CallIndirect(FunctionType, Idx<Table>),
 
+    RefNull(RefType),
+    RefIsNull,
     RefFunc(Idx<Function>),
 
     // TODO: Include the type explicitly in the instruction to remove
@@ -1601,6 +1603,8 @@ impl Instr {
             Unary(op) => op.to_name(),
             Binary(op) => op.to_name(),
 
+            RefNull(_) => "rf.null",
+            RefIsNull => "ref.is_null",
             RefFunc(_) => "ref.func",
         }
     }
@@ -1639,6 +1643,8 @@ impl Instr {
             // Stack-polymorphic, needs type inference (br* above as well).
             Unreachable => None,
 
+            RefNull(t) => Some(FunctionType::new(&[], &[ValType::Ref(t)])),
+            RefIsNull => None,
             RefFunc(_) => Some(FunctionType::new(&[], &[ValType::Ref(RefType::FuncRef)])),
         }
     }
@@ -1746,7 +1752,7 @@ impl fmt::Display for Instr {
         match self {
             // instructions without arguments
             Unreachable | Nop | Drop | Select | Return | Else | End | MemorySize(_)
-            | MemoryGrow(_) | Unary(_) | Binary(_) => Ok(()),
+            | MemoryGrow(_) | Unary(_) | Binary(_) | RefIsNull => Ok(()),
 
             Block(ty) | Loop(ty) | If(ty) => write!(f, " {ty}"),
 
@@ -1782,6 +1788,7 @@ impl fmt::Display for Instr {
 
             Const(val) => write!(f, " {val}"),
 
+            RefNull(ty) => write!(f, "{ty:?}"),
             RefFunc(idx) => write!(f, "{idx:?}"),
         }
     }
