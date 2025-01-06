@@ -300,13 +300,6 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                             table_index,
                             offset_expr,
                         } => {
-                            let table = module
-                                .tables
-                                .get_mut(u32_to_usize(table_index))
-                                .ok_or_else(|| {
-                                    ParseIssue::index(element_offset, table_index, "table")
-                                })?;
-
                             // Most offset expressions are just a constant and the end instruction.
                             let mut offset_instrs = Vec::with_capacity(2);
                             for op_offset in
@@ -316,9 +309,13 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                                 offset_instrs.push(parse_instr(op, offset, &types, &metadata)?)
                             }
 
-                            table.elements.push(Element {
-                                offset: offset_instrs,
-                                functions: items,
+                            module.elements.push(Element {
+                                typ: refty,
+                                init: items,
+                                mode: ElementMode::Active { 
+                                    table: table_index.into(), 
+                                    offset: offset_instrs 
+                                }
                             })
                         }
                         wp::ElementKind::Passive => Err(ParseIssue::unsupported(

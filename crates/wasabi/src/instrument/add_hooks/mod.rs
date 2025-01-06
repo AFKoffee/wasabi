@@ -14,7 +14,9 @@ use wasabi_wasm::LocalOp::*;
 use wasabi_wasm::MemoryOp;
 use wasabi_wasm::Module;
 use wasabi_wasm::Mutability;
+use wasabi_wasm::RefType;
 use wasabi_wasm::Val;
+use wasabi_wasm::ValType;
 use wasabi_wasm::ValType::*;
 
 use crate::options::Hook;
@@ -767,6 +769,10 @@ pub fn add_hooks(
                     } else {
                         instrumented_body.push(instr);
                     }
+                },
+                RefFunc(_) => {
+                    type_stack.push_val(ValType::Ref(RefType::FuncRef)); // TODO: Why not use instr.simple_type() here?
+                    instrumented_body.push(instr.clone());
                 }
             }
         }

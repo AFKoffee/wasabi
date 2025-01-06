@@ -1600,6 +1600,8 @@ impl Instr {
             Store(op, _) => op.to_name(),
             Unary(op) => op.to_name(),
             Binary(op) => op.to_name(),
+
+            RefFunc(_) => "ref.func",
         }
     }
 
@@ -1636,6 +1638,8 @@ impl Instr {
             Drop | Select => None,
             // Stack-polymorphic, needs type inference (br* above as well).
             Unreachable => None,
+
+            RefFunc(_) => Some(FunctionType::new(&[], &[ValType::Ref(RefType::FuncRef)])),
         }
     }
 }
@@ -1777,6 +1781,8 @@ impl fmt::Display for Instr {
             }
 
             Const(val) => write!(f, " {val}"),
+
+            RefFunc(idx) => write!(f, "{idx:?}"),
         }
     }
 }
@@ -1841,7 +1847,7 @@ impl Module {
         &self.tables[idx.to_usize()]
     }
 
-    pub fn table_mut(&self, idx: Idx<Table>) -> &mut Table {
+    pub fn table_mut(&mut self, idx: Idx<Table>) -> &mut Table {
         &mut self.tables[idx.to_usize()]
     }
 

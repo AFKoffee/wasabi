@@ -337,7 +337,7 @@ fn encode_tables(
     let mut element_section = we::ElementSection::new();
 
     for (hl_table_idx, table) in module.tables() {
-        let ll_table_idx = if table.import.is_none() {
+        if table.import.is_none() {
             table_section.table(get_tabletype_from_table(table));
             state.insert_table_idx(hl_table_idx)
         } else {
@@ -696,6 +696,10 @@ fn encode_instruction(
         Instr::Binary(BinaryOp::F64Min) => we::Instruction::F64Min,
         Instr::Binary(BinaryOp::F64Max) => we::Instruction::F64Max,
         Instr::Binary(BinaryOp::F64Copysign) => we::Instruction::F64Copysign,
+        
+        Instr::RefFunc(idx) => we::Instruction::RefFunc(
+            state.map_function_idx(idx)?.to_u32()
+        ),
     })
 }
 
