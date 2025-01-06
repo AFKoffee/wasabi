@@ -259,7 +259,14 @@ impl HookMap {
 
             Block(_) | Loop(_) | Else | End => panic!("cannot get hook for block-type instruction with this method, please use the other methods specialized to the block type"),
             
-            RefFunc(_) | RefIsNull | RefNull(_) => todo!("instrumentation not supported!")
+            RefIsNull => {
+                assert_eq!(polymorphic_tys.len(), 1, "ref.is_null has only one argument");
+                let args = args!(isNull: I32);
+                let instr_name = instr.to_name();
+                let js_args = &format!("\"{}\", {}", instr_name, args.iter().map(Arg::to_lowlevel_long_expr).collect::<Vec<_>>().join(", "));
+                Hook::new(ll_name, args, "ref.is_null", js_args)
+            }
+            RefFunc(_) | RefNull(_) => todo!("instrumentation not supported!")
             }
         };
 
