@@ -758,6 +758,11 @@ pub enum Instr {
     Select,
     TypedSelect(ValType),
 
+    TableGet(Idx<Table>),
+    TableSet(Idx<Table>),
+    TableSize(Idx<Table>),
+    TableGrow(Idx<Table>),
+
     // TODO: Get rid of all locals by using block params and results only + a pick or copy
     // instruction, that copies the nth value on the stack to the top.
     // Benefit: fully in SSA form, decoalesced locals, liveness information explicit.
@@ -1585,6 +1590,11 @@ impl Instr {
             Drop => "drop",
             Select | TypedSelect(_) => "select",
 
+            TableGet(_) => "table.get",
+            TableSet(_) => "table.set",
+            TableSize(_) => "table.size",
+            TableGrow(_) => "table.grow",
+
             Local(LocalOp::Get, _) => "local.get",
             Local(LocalOp::Set, _) => "local.set",
             Local(LocalOp::Tee, _) => "local.tee",
@@ -1648,6 +1658,11 @@ impl Instr {
             RefNull(t) => Some(FunctionType::new(&[], &[ValType::Ref(t)])),
             RefIsNull => None,
             RefFunc(_) => Some(FunctionType::new(&[], &[ValType::Ref(RefType::FuncRef)])),
+
+            TableGet(_) => None,
+            TableSet(_) => None,
+            TableSize(_) => Some(FunctionType::new(&[], &[I32])),
+            TableGrow(_) => None
         }
     }
 }
@@ -1791,8 +1806,13 @@ impl fmt::Display for Instr {
             Const(val) => write!(f, " {val}"),
             TypedSelect(ty) => write!(f, " {ty:?}"),
 
-            RefNull(ty) => write!(f, "{ty:?}"),
-            RefFunc(idx) => write!(f, "{idx:?}"),
+            RefNull(ty) => write!(f, " {ty:?}"),
+            RefFunc(idx) => write!(f, " {idx:?}"),
+
+            TableGet(table_idx) => write!(f, " {table_idx:?}"),
+            TableSet(table_idx) => write!(f, " {table_idx:?}"),
+            TableSize(table_idx) => write!(f, " {table_idx:?}"),
+            TableGrow(table_idx) => write!(f, " {table_idx:?}"),
         }
     }
 }

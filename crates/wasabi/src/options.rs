@@ -104,6 +104,11 @@ pub enum Hook {
     Global,
     
     RefIsNull,
+
+    TableGet,
+    TableSet,
+    TableSize,
+    TableGrow,
 }
 
 // Use serde_plain for parsing strings to enum variants.

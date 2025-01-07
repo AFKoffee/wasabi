@@ -631,7 +631,7 @@ fn parse_instr(
             table_index,
             table_byte,
         } => {
-            let table_idx = if table_index != 0 { table_index } else { 0 };
+            let table_idx = if table_index != 0 { table_index } else { 0 }; // TODO: Remove this line???
             assert!(table_byte == 0, "not sure which extension this is");
             CallIndirect(types.get(type_index, offset + 1)?, table_idx.into())
         }
@@ -873,16 +873,13 @@ fn parse_instr(
 
         wp::TableFill { table: _ } => Err(ParseIssue::unsupported(
             offset,
-            WasmExtension::ReferenceTypes,
+            WasmExtension::BulkMemoryOperations,
         ))?,
 
-        wp::TableGet { table: _ }
-        | wp::TableSet { table: _ }
-        | wp::TableGrow { table: _ }
-        | wp::TableSize { table: _ } => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ReferenceTypes,
-        ))?,
+        wp::TableGet { table } => TableGet(table.into()),
+        wp::TableSet { table } => TableSet(table.into()),
+        wp::TableGrow { table} => TableGrow(table.into()),
+        wp::TableSize { table } => TableSize(table.into()),
 
         wp::MemoryAtomicNotify { memarg: _ }
         | wp::MemoryAtomicWait32 { memarg: _ }

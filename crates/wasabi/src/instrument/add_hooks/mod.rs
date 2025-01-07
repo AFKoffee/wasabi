@@ -666,6 +666,51 @@ pub fn add_hooks(
                     }
                 }
 
+                /* Table Instructions */
+
+                TableGet(table_idx) => {
+                    let t = module_info.read().tables[table_idx.to_usize()];
+                    let ty = FunctionType::new(&[I32], &[ValType::Ref(t)]);
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::TableGet) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[ValType::Ref(t)]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                },
+                TableSet(table_idx) => {
+                    let t = module_info.read().tables[table_idx.to_usize()];
+                    let ty = FunctionType::new(&[I32, ValType::Ref(t)], &[]);
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::TableSet) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[ValType::Ref(t)]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
+                TableSize(_) => {
+                    let ty = instr.simple_type().unwrap();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::TableSize) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
+                TableGrow(table_idx) => {
+                    let t = module_info.read().tables[table_idx.to_usize()];
+                    let ty = FunctionType::new(&[ValType::Ref(t), I32], &[I32]);
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::TableGrow) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[ValType::Ref(t)]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                },
 
                 /* Memory Instructions */
 
@@ -853,6 +898,25 @@ pub fn add_hooks(
         generate_js(module_info.into_inner(), &js_hooks, node_js),
         hook_count,
     ))
+}
+
+fn setup_instrument(
+    function: &mut Function,
+    ty: FunctionType,
+    instrumented_body: &mut Vec<Instr>,
+    instr: &Instr,
+    location: &(Instr, Instr),
+) {
+    let input_tmps = function.add_fresh_locals(ty.inputs());
+    let result_tmps = function.add_fresh_locals(ty.results());
+    save_stack_to_locals(instrumented_body, &input_tmps);
+    instrumented_body.push(instr.clone());
+    save_stack_to_locals(instrumented_body, &result_tmps);
+    instrumented_body.extend_from_slice(&[location.0.clone(), location.1.clone()]);
+    restore_locals_with_i64_handling(
+        instrumented_body,
+        input_tmps.iter().chain(result_tmps.iter()).copied(),
+    );
 }
 
 /// convenience to hand (function/instr/local/global) indices to hooks
