@@ -24,14 +24,12 @@ use crate::options::HookSet;
 
 use self::block_stack::BlockStack;
 use self::block_stack::BlockStackElement;
-use self::convert_i64::convert_i64_instr;
 use self::duplicate_stack::*;
 use self::hook_map::HookMap;
 use self::static_info::*;
 use self::type_stack::TypeStack;
 
 pub mod block_stack;
-mod convert_i64;
 mod duplicate_stack;
 mod hook_map;
 mod static_info;
@@ -570,7 +568,7 @@ pub fn add_hooks(
                             location.0,
                             location.1,
                         ]);
-                        convert_i64_instr(&mut instrumented_body, Local(Get, tmp), ty);
+                        instrumented_body.push(Local(Get, tmp));
                         // replace drop with hook call
                         instrumented_body.push(hooks.instr(&instr, &[ty]));
                     } else {
@@ -643,7 +641,7 @@ pub fn add_hooks(
                             location.1,
                             local_idx.to_const(),
                         ]);
-                        convert_i64_instr(&mut instrumented_body, Local(Get, local_idx), local_ty);
+                        instrumented_body.push(Local(Get, local_idx));
                         instrumented_body.push(hooks.instr(&instr, &[local_ty]));
                     }
                 }
@@ -661,7 +659,7 @@ pub fn add_hooks(
                             location.1,
                             global_idx.to_const(),
                         ]);
-                        convert_i64_instr(&mut instrumented_body, Global(GlobalOp::Get, global_idx), global_ty);
+                        instrumented_body.push(Global(GlobalOp::Get, global_idx));
                         instrumented_body.push(hooks.instr(&instr, &[global_ty]));
                     }
                 }
@@ -813,7 +811,7 @@ pub fn add_hooks(
                             location.1,
                         ]);
                         // optimization: just call T.const again, instead of duplicating result into local
-                        convert_i64_instr(&mut instrumented_body, instr.clone(), val.to_type());
+                        instrumented_body.push(instr.clone());
                         instrumented_body.push(hooks.instr(&instr, &[]));
                     }
                 }
