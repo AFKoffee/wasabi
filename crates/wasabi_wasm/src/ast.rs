@@ -59,6 +59,9 @@ impl Val {
             ValType::I64 => Val::I64(str.parse().map_err(|_| ())?),
             ValType::F32 => Val::F32(str.parse().map_err(|_| ())?),
             ValType::F64 => Val::F64(str.parse().map_err(|_| ())?),
+            // reference type can not be parsed into simple value
+            ValType::Ref(_) => return Err(()),
+            
         })
     }
 }
@@ -82,6 +85,15 @@ pub enum ValType {
     I64,
     F32,
     F64,
+    // Introduce Reference type as a new kind of value type
+    Ref(RefType)
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RefType {
+    FuncRef,
+    ExternRef
 }
 
 #[test]
@@ -97,6 +109,8 @@ impl ValType {
             ValType::I64 => Val::I64(0),
             ValType::F32 => Val::F32(OrderedFloat(0.0)),
             ValType::F64 => Val::F64(OrderedFloat(0.0)),
+            ValType::Ref(_) => panic!("Reference Types do not have a zero!"),
+            
         }
     }
 
@@ -108,6 +122,8 @@ impl ValType {
             ValType::I64 => "i64",
             ValType::F32 => "f32",
             ValType::F64 => "f64",
+            ValType::Ref(RefType::ExternRef) => "externref",
+            ValType::Ref(RefType::FuncRef) => "funcref",
         }
     }
 
@@ -120,6 +136,8 @@ impl ValType {
             ValType::I64 => 'I',
             ValType::F32 => 'f',
             ValType::F64 => 'F',
+            ValType::Ref(RefType::ExternRef) => 'E',
+            ValType::Ref(RefType::FuncRef) => 'F',
         }
     }
 
@@ -319,9 +337,10 @@ pub struct Module {
     pub functions: Vec<Function>,
     pub globals: Vec<Global>,
 
-    // TODO make these options to ensure there is only a single one of each
     pub tables: Vec<Table>,
     pub memories: Vec<Memory>,
+
+    pub elements: Vec<Element>,
 
     pub start: Option<Idx<Function>>,
 
@@ -435,8 +454,8 @@ pub struct Global {
 pub struct Table {
     pub limits: Limits,
     // Unlike functions and globals, an imported table can still be initialized with elements.
+    pub ref_type: RefType,
     pub import: Option<(String, String)>,
-    pub elements: Vec<Element>,
     pub export: Vec<String>,
 }
 
@@ -486,8 +505,16 @@ pub struct ParamRef<'a> {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct Element {
-    pub offset: Expr,
-    pub functions: Vec<Idx<Function>>,
+    pub typ: RefType,
+    pub init: Vec<Expr>,
+    pub mode: ElementMode
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum ElementMode {
+    Passive,
+    Active {table: Idx<Table>, offset: Expr},
+    Declarative,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
@@ -719,12 +746,22 @@ pub enum Instr {
     // TODO: remove Idx<Table>, always 0 in MVP.
     CallIndirect(FunctionType, Idx<Table>),
 
+    RefNull(RefType),
+    RefIsNull,
+    RefFunc(Idx<Function>),
+
     // TODO: Include the type explicitly in the instruction to remove
     // value-polymorphism.
     // However, this would require type checking during lowlevel parsing :(
     Drop,
     // TODO: Replace with `If([ty, ty] -> [ty], ...)
     Select,
+    TypedSelect(ValType),
+
+    TableGet(Idx<Table>),
+    TableSet(Idx<Table>),
+    TableSize(Idx<Table>),
+    TableGrow(Idx<Table>),
 
     // TODO: Get rid of all locals by using block params and results only + a pick or copy
     // instruction, that copies the nth value on the stack to the top.
@@ -1551,7 +1588,12 @@ impl Instr {
             CallIndirect(_, _) => "call_indirect",
 
             Drop => "drop",
-            Select => "select",
+            Select | TypedSelect(_) => "select",
+
+            TableGet(_) => "table.get",
+            TableSet(_) => "table.set",
+            TableSize(_) => "table.size",
+            TableGrow(_) => "table.grow",
 
             Local(LocalOp::Get, _) => "local.get",
             Local(LocalOp::Set, _) => "local.set",
@@ -1571,6 +1613,10 @@ impl Instr {
             Store(op, _) => op.to_name(),
             Unary(op) => op.to_name(),
             Binary(op) => op.to_name(),
+
+            RefNull(_) => "rf.null",
+            RefIsNull => "ref.is_null",
+            RefFunc(_) => "ref.func",
         }
     }
 
@@ -1594,6 +1640,7 @@ impl Instr {
                 func_ty.inputs().iter().copied().chain(std::iter::once(I32)),
                 func_ty.results().iter().copied(),
             )),
+            TypedSelect(t) => Some(FunctionType::new(&[t, t, I32], &[t])),
 
             // Difficult because of nesting and block types.
             Block(_) | Loop(_) | If(_) | Else | End => None,
@@ -1607,6 +1654,15 @@ impl Instr {
             Drop | Select => None,
             // Stack-polymorphic, needs type inference (br* above as well).
             Unreachable => None,
+
+            RefNull(t) => Some(FunctionType::new(&[], &[ValType::Ref(t)])),
+            RefIsNull => None,
+            RefFunc(_) => Some(FunctionType::new(&[], &[ValType::Ref(RefType::FuncRef)])),
+
+            TableGet(_) => None,
+            TableSet(_) => None,
+            TableSize(_) => Some(FunctionType::new(&[], &[I32])),
+            TableGrow(_) => None
         }
     }
 }
@@ -1713,7 +1769,7 @@ impl fmt::Display for Instr {
         match self {
             // instructions without arguments
             Unreachable | Nop | Drop | Select | Return | Else | End | MemorySize(_)
-            | MemoryGrow(_) | Unary(_) | Binary(_) => Ok(()),
+            | MemoryGrow(_) | Unary(_) | Binary(_) | RefIsNull => Ok(()),
 
             Block(ty) | Loop(ty) | If(ty) => write!(f, " {ty}"),
 
@@ -1748,6 +1804,15 @@ impl fmt::Display for Instr {
             }
 
             Const(val) => write!(f, " {val}"),
+            TypedSelect(ty) => write!(f, " {ty:?}"),
+
+            RefNull(ty) => write!(f, " {ty:?}"),
+            RefFunc(idx) => write!(f, " {idx:?}"),
+
+            TableGet(table_idx) => write!(f, " {table_idx:?}"),
+            TableSet(table_idx) => write!(f, " {table_idx:?}"),
+            TableSize(table_idx) => write!(f, " {table_idx:?}"),
+            TableGrow(table_idx) => write!(f, " {table_idx:?}"),
         }
     }
 }
@@ -1785,6 +1850,10 @@ impl Module {
         self.memories.iter().enumerate().map(|(i, m)| (i.into(), m))
     }
 
+    pub fn elements(&self) -> impl Iterator<Item = (Idx<Element>, &Element)> {
+        self.elements.iter().enumerate().map(|(i, t)| (i.into(), t))
+    }
+
     // Convenient accessors of functions for the typed, high-level index.
     // TODO Add the same for globals, tables, and memories, if needed.
 
@@ -1802,6 +1871,14 @@ impl Module {
 
     pub fn global_mut(&mut self, idx: Idx<Global>) -> &mut Global {
         &mut self.globals[idx.to_usize()]
+    }
+
+    pub fn table(&self, idx: Idx<Table>) -> &Table {
+        &self.tables[idx.to_usize()]
+    }
+
+    pub fn table_mut(&mut self, idx: Idx<Table>) -> &mut Table {
+        &mut self.tables[idx.to_usize()]
     }
 
     pub fn add_function(
@@ -2185,20 +2262,25 @@ impl Global {
 }
 
 impl Table {
-    pub fn new(limits: Limits) -> Table {
+    pub fn new(limits: Limits, ref_type: RefType) -> Table {
         Table {
             limits,
+            ref_type,
             import: None,
-            elements: Vec::new(),
             export: Vec::new(),
         }
     }
 
-    pub fn new_imported(limits: Limits, import_module: String, import_name: String) -> Table {
+    pub fn new_imported(
+        limits: Limits, 
+        ref_type: RefType,
+        import_module: String, 
+        import_name: String
+    ) -> Table {
         Table {
             limits,
+            ref_type,
             import: Some((import_module, import_name)),
-            elements: Vec::new(),
             export: Vec::new(),
         }
     }

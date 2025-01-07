@@ -96,14 +96,18 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                                 import_name,
                             ),
                         ),
-                        wp::TypeRef::Table(ty) => module.tables.push(
-                            // Same issue regarding `import_offset`.
-                            Table::new_imported(
-                                parse_table_ty(ty, import_offset)?,
-                                import_module,
-                                import_name,
-                            ),
-                        ),
+                        wp::TypeRef::Table(ty) => {
+                            let (limits, ref_type) = parse_table_ty(ty, import_offset)?;
+                            module.tables.push(
+                                // Same issue regarding `import_offset`.
+                                Table::new_imported(
+                                    limits,
+                                    ref_type,
+                                    import_module,
+                                    import_name,
+                                ),
+                            )
+                        },
                         wp::TypeRef::Memory(ty) => {
                             // Same issue regarding `import_offset`.
                             module.memories.push(Memory::new_imported(
@@ -145,9 +149,9 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
 
                 for elem in reader.into_iter_with_offsets() {
                     let (offset, table_ty) = elem?;
-                    let table_ty = parse_table_ty(table_ty, offset)?;
+                    let (limits, ref_type) = parse_table_ty(table_ty, offset)?;
                     // Fill in the elements of the table later with the element section.
-                    module.tables.push(Table::new(table_ty));
+                    module.tables.push(Table::new(limits, ref_type));
                 }
             }
             wp::Payload::MemorySection(reader) => {
@@ -257,17 +261,38 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
 
                 for elem in reader.into_iter_with_offsets() {
                     let (element_offset, element) = elem?;
-                    parse_elem_ty(element.ty, element_offset)?;
+                    let refty = parse_elem_ty(element.ty, element_offset)?;
 
-                    let items = match element.items {
-                        wp::ElementItems::Functions(items_reader) => items_reader
-                            .into_iter()
-                            .map(|func_idx| func_idx.map(|func_idx| u32_to_usize(func_idx).into()))
-                            .collect::<Result<Vec<Idx<Function>>, _>>()?,
-                        wp::ElementItems::Expressions(reader) => Err(ParseIssue::unsupported(
-                            reader.original_position(),
-                            WasmExtension::ReferenceTypes,
-                        ))?,
+                    let items: Vec<Expr> = match element.items {
+                        wp::ElementItems::Functions(items_reader) => {
+                            let mut offset_instrs = Vec::new();
+                            items_reader.into_iter().for_each(|func_idx| {
+                                if let Ok(func_idx) = func_idx {
+                                    offset_instrs.push(Instr::RefFunc(func_idx.into()));
+                                    offset_instrs.push(Instr::End)
+                                }
+                            });
+                            offset_instrs.chunks(2).map(|x| x.to_vec()).collect()
+                        }
+                        wp::ElementItems::Expressions(items_reader) => {
+                            let mut offset_instrs = Vec::new();
+                            items_reader.into_iter().for_each(|const_expr| {
+                                if let Ok(const_expr) = const_expr {
+                                    for op_offset in
+                                        const_expr.get_operators_reader().into_iter_with_offsets()
+                                    {
+                                        if let Ok((op, offset)) = op_offset {
+                                            let value = match parse_instr(op, offset, &types, &metadata) {
+                                                Ok(it) => it,
+                                                Err(_) => return,
+                                            };
+                                            offset_instrs.push(value)
+                                        }
+                                    }
+                                }
+                            });
+                            offset_instrs.chunks(2).map(|x| x.to_vec()).collect()
+                        }
                     };
 
                     match element.kind {
@@ -275,13 +300,6 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                             table_index,
                             offset_expr,
                         } => {
-                            let table = module
-                                .tables
-                                .get_mut(u32_to_usize(table_index))
-                                .ok_or_else(|| {
-                                    ParseIssue::index(element_offset, table_index, "table")
-                                })?;
-
                             // Most offset expressions are just a constant and the end instruction.
                             let mut offset_instrs = Vec::with_capacity(2);
                             for op_offset in
@@ -291,19 +309,24 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                                 offset_instrs.push(parse_instr(op, offset, &types, &metadata)?)
                             }
 
-                            table.elements.push(Element {
-                                offset: offset_instrs,
-                                functions: items,
+                            module.elements.push(Element {
+                                typ: refty,
+                                init: items,
+                                mode: ElementMode::Active { 
+                                    table: table_index.into(), 
+                                    offset: offset_instrs 
+                                }
                             })
                         }
                         wp::ElementKind::Passive => Err(ParseIssue::unsupported(
                             element_offset,
                             WasmExtension::BulkMemoryOperations,
                         ))?,
-                        wp::ElementKind::Declared => Err(ParseIssue::unsupported(
-                            element_offset,
-                            WasmExtension::ReferenceTypes,
-                        ))?,
+                        wp::ElementKind::Declared => module.elements.push(Element {
+                            typ: refty,
+                            init: items,
+                            mode: ElementMode::Declarative,
+                        }),
                     }
                 }
             }
@@ -608,14 +631,9 @@ fn parse_instr(
             table_index,
             table_byte,
         } => {
-            if table_index != 0 {
-                Err(ParseIssue::unsupported(
-                    offset,
-                    WasmExtension::ReferenceTypes,
-                ))?
-            }
+            let table_idx = if table_index != 0 { table_index } else { 0 }; // TODO: Remove this line???
             assert!(table_byte == 0, "not sure which extension this is");
-            CallIndirect(types.get(type_index, offset + 1)?, 0usize.into())
+            CallIndirect(types.get(type_index, offset + 1)?, table_idx.into())
         }
 
         wp::ReturnCall { function_index: _ }
@@ -627,10 +645,7 @@ fn parse_instr(
         wp::Drop => Drop,
         wp::Select => Select,
 
-        wp::TypedSelect { ty: _ } => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ReferenceTypes,
-        ))?,
+        wp::TypedSelect { ty } => TypedSelect(parse_val_ty(ty, offset)?),
 
         wp::LocalGet { local_index } => Local(LocalOp::Get, local_index.into()),
         wp::LocalSet { local_index } => Local(LocalOp::Set, local_index.into()),
@@ -686,9 +701,9 @@ fn parse_instr(
         wp::F32Const { value } => Const(Val::F32(OrderedFloat(f32::from_bits(value.bits())))),
         wp::F64Const { value } => Const(Val::F64(OrderedFloat(f64::from_bits(value.bits())))),
 
-        wp::RefNull { ty: _ } | wp::RefIsNull | wp::RefFunc { function_index: _ } => Err(
-            ParseIssue::unsupported(offset, WasmExtension::ReferenceTypes),
-        )?,
+        wp::RefNull { ty} => RefNull(parse_elem_ty(ty, offset)?),
+        wp::RefIsNull => RefIsNull,
+        wp::RefFunc { function_index } => RefFunc(function_index.into()),
 
         wp::I32Eqz => Unary(UnaryOp::I32Eqz),
         wp::I64Eqz => Unary(UnaryOp::I64Eqz),
@@ -858,16 +873,13 @@ fn parse_instr(
 
         wp::TableFill { table: _ } => Err(ParseIssue::unsupported(
             offset,
-            WasmExtension::ReferenceTypes,
+            WasmExtension::BulkMemoryOperations,
         ))?,
 
-        wp::TableGet { table: _ }
-        | wp::TableSet { table: _ }
-        | wp::TableGrow { table: _ }
-        | wp::TableSize { table: _ } => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ReferenceTypes,
-        ))?,
+        wp::TableGet { table } => TableGet(table.into()),
+        wp::TableSet { table } => TableSet(table.into()),
+        wp::TableGrow { table} => TableGrow(table.into()),
+        wp::TableSize { table } => TableSize(table.into()),
 
         wp::MemoryAtomicNotify { memarg: _ }
         | wp::MemoryAtomicWait32 { memarg: _ }
@@ -1242,15 +1254,18 @@ fn parse_memory_ty(ty: wp::MemoryType, offset: usize) -> Result<Limits, ParseErr
     })
 }
 
-fn parse_table_ty(ty: wp::TableType, offset: usize) -> Result<Limits, ParseError> {
-    parse_elem_ty(ty.element_type, offset)?;
-    Ok(Limits {
-        initial_size: ty.initial,
-        max_size: ty.maximum,
-    })
+fn parse_table_ty(ty: wp::TableType, offset: usize) -> Result<(Limits, RefType), ParseError> {
+    let refty = parse_elem_ty(ty.element_type, offset)?;
+    Ok((
+        Limits {
+            initial_size: ty.initial,
+            max_size: ty.maximum,
+        },
+        refty,
+    ))
 }
 
-fn parse_elem_ty(ty: wp::ValType, offset: usize) -> Result<(), ParseError> {
+fn parse_elem_ty(ty: wp::ValType, offset: usize) -> Result<RefType, ParseError> {
     use wp::ValType::*;
     match ty {
         I32 | I64 | F32 | F64 => Err(ParseIssue::message(
@@ -1263,11 +1278,8 @@ fn parse_elem_ty(ty: wp::ValType, offset: usize) -> Result<(), ParseError> {
             "only reftypes, not value types are allowed as table elements",
             None,
         ))?,
-        FuncRef => Ok(()),
-        ExternRef => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ReferenceTypes,
-        ))?,
+        FuncRef => Ok(RefType::FuncRef),
+        ExternRef => Ok(RefType::ExternRef),
     }
 }
 
@@ -1326,14 +1338,8 @@ fn parse_val_ty(ty: wp::ValType, offset: usize) -> Result<ValType, ParseError> {
         wp::ValType::F32 => Ok(ValType::F32),
         wp::ValType::F64 => Ok(ValType::F64),
         wp::ValType::V128 => Err(ParseIssue::unsupported(offset, WasmExtension::Simd))?,
-        wp::ValType::FuncRef => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ReferenceTypes,
-        ))?,
-        wp::ValType::ExternRef => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ReferenceTypes,
-        ))?,
+        wp::ValType::FuncRef => Ok(ValType::Ref(RefType::FuncRef)),
+        wp::ValType::ExternRef => Ok(ValType::Ref(RefType::ExternRef)),
     }
 }
 

@@ -158,6 +158,8 @@ impl HookMap {
             MemorySize(_) => Hook::new(&ll_name, args!(currentSizePages: I32), &ll_name, "currentSizePages"),
             MemoryGrow(_) => Hook::new(&ll_name, args!(deltaPages: I32, previousSizePages: I32), &ll_name, "deltaPages, previousSizePages"),
 
+            TableSize(_) => Hook::new(&ll_name, args!(size: I32), &ll_name, "size"),
+
             Load(op, _) => {
                 let ty = op.to_type().results()[0];
                 let args = args!(offset: I32, align: I32, addr: I32, value: ty);
@@ -214,12 +216,33 @@ impl HookMap {
                 let js_args = &args[0].to_lowlevel_long_expr();
                 Hook::new(ll_name, args, "drop", js_args)
             }
-            Select => {
+            Select | TypedSelect(_) => {
                 assert_eq!(polymorphic_tys.len(), 2, "select has two polymorphic arguments");
                 assert_eq!(polymorphic_tys[0], polymorphic_tys[1], "select arguments must be equal");
                 let args = args!(condition: I32, input0: polymorphic_tys[0], input1: polymorphic_tys[1]);
                 let js_args = &format!("condition !== 0, {}", args[1..].iter().map(Arg::to_lowlevel_long_expr).collect::<Vec<_>>().join(", "));
                 Hook::new(ll_name, args, "select", js_args)
+            }
+            TableGet(_) => {
+                assert_eq!(polymorphic_tys.len(), 1, "table.get has only one argument");
+                let args = args!(index: I32, value: polymorphic_tys[0]);
+                let instr_name = instr.to_name();
+                let js_args = &format!("\"{}\", {}", instr_name, args.iter().map(Arg::to_lowlevel_long_expr).collect::<Vec<_>>().join(", "));
+                Hook::new(ll_name, args, "table_get", js_args)
+            }
+            TableSet(_) => {
+                assert_eq!(polymorphic_tys.len(), 1, "table.set has only one argument");
+                let args = args!(index: I32, value: polymorphic_tys[0]);
+                let instr_name = instr.to_name();
+                let js_args = &format!("\"{}\", {}", instr_name, args.iter().map(Arg::to_lowlevel_long_expr).collect::<Vec<_>>().join(", "));
+                Hook::new(ll_name, args, "table_set", js_args)
+            }
+            TableGrow(_) => {
+                assert_eq!(polymorphic_tys.len(), 1, "table.grow has only one argument");
+                let args = args!(init: polymorphic_tys[0], delta: I32, previousSize: I32);
+                let instr_name = instr.to_name();
+                let js_args = &format!("\"{}\", {}", instr_name, args.iter().map(Arg::to_lowlevel_long_expr).collect::<Vec<_>>().join(", "));
+                Hook::new(ll_name, args, "table_grow", js_args)
             }
             Local(_, _) => {
                 assert_eq!(polymorphic_tys.len(), 1, "local instructions have only one argument");
@@ -258,6 +281,16 @@ impl HookMap {
             /* instructions that need additional information and thus have own method */
 
             Block(_) | Loop(_) | Else | End => panic!("cannot get hook for block-type instruction with this method, please use the other methods specialized to the block type"),
+            
+            RefIsNull => {
+                assert_eq!(polymorphic_tys.len(), 1, "ref.is_null has only one argument");
+                let args = args!(isNull: I32);
+                let instr_name = instr.to_name();
+                let js_args = &format!("\"{}\", {}", instr_name, args.iter().map(Arg::to_lowlevel_long_expr).collect::<Vec<_>>().join(", "));
+                Hook::new(ll_name, args, "ref.is_null", js_args)
+            }
+
+            RefFunc(_) | RefNull(_) => todo!("instrumentation not supported!"),
             }
         };
 
