@@ -322,10 +322,11 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                             element_offset,
                             WasmExtension::BulkMemoryOperations,
                         ))?,
-                        wp::ElementKind::Declared => Err(ParseIssue::unsupported(
-                            element_offset,
-                            WasmExtension::ReferenceTypes,
-                        ))?,
+                        wp::ElementKind::Declared => module.elements.push(Element {
+                            typ: refty,
+                            init: items,
+                            mode: ElementMode::Declarative,
+                        }),
                     }
                 }
             }
