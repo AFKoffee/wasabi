@@ -21,11 +21,11 @@ RUN cargo --version && rustc --version && cargo clippy --version && wasm-validat
 # cd into root home dir to store code and tests
 WORKDIR /root
 
-# copy code
-COPY ./crates crates
-
 # copy tests
 COPY ./test-inputs test-inputs
+
+# copy code
+COPY ./crates crates
 
 # cd into wasabi crate (which is to be tested)
 WORKDIR crates/wasabi
