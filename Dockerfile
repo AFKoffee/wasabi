@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 # update package registry
 RUN apt-get update
