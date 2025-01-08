@@ -341,6 +341,7 @@ pub struct Module {
     pub memories: Vec<Memory>,
 
     pub elements: Vec<Element>,
+    pub datas: Vec<Data>,
 
     pub data_count: Option<u32>,
     pub start: Option<Idx<Function>>,
@@ -465,7 +466,6 @@ pub struct Memory {
     pub limits: Limits,
     // Unlike functions and globals, an imported memory can still be initialized with data elements.
     pub import: Option<(String, String)>,
-    pub data: Vec<Data>,
     pub export: Vec<String>,
 }
 
@@ -520,8 +520,14 @@ pub enum ElementMode {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct Data {
-    pub offset: Expr,
-    pub bytes: Vec<u8>,
+    pub init: Vec<u8>,
+    pub mode: DataMode,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum DataMode {
+    Passive,
+    Active {memory: Idx<Memory>, offset: Expr},
 }
 
 /// Metainformation how low-level sections and function bodies map to byte offsets in the binary.
@@ -1856,6 +1862,10 @@ impl Module {
         self.elements.iter().enumerate().map(|(i, t)| (i.into(), t))
     }
 
+    pub fn datas(&self) -> impl Iterator<Item = (Idx<Data>, &Data)> {
+        self.datas.iter().enumerate().map(|(i, m)| (i.into(), m))
+    }
+
     // Convenient accessors of functions for the typed, high-level index.
     // TODO Add the same for globals, tables, and memories, if needed.
 
@@ -2299,7 +2309,6 @@ impl Memory {
         Memory {
             limits,
             import: None,
-            data: Vec::new(),
             export: Vec::new(),
         }
     }
@@ -2308,7 +2317,6 @@ impl Memory {
         Memory {
             limits,
             import: Some((import_module, import_name)),
-            data: Vec::new(),
             export: Vec::new(),
         }
     }

@@ -25,6 +25,7 @@ mod marker {
         pub struct Table;
         pub struct Memory;
         pub struct Element;
+        pub struct  Data;
     }
 }
 
@@ -42,6 +43,7 @@ struct EncodeState {
     table_idx: IntMap<Idx<Table>, Idx<marker::we::Table>>,
     memory_idx: IntMap<Idx<Memory>, Idx<marker::we::Memory>>,
     element_idx: IntMap<Idx<Element>, Idx<marker::we::Element>>,
+    data_idx: IntMap<Idx<Data>, Idx<marker::we::Data>>,
 
     last_encoded_section: Option<SectionId>,
     custom_sections_encoded: usize,
@@ -104,6 +106,13 @@ impl EncodeState {
         element_idx,
         Element,
         "element"
+    );
+    encode_state_idx_fns!(
+        insert_data_idx, 
+        map_data_idx, 
+        data_idx, 
+        Data, 
+        "data"
     );
     encode_state_idx_fns!(
         insert_global_idx,
@@ -392,17 +401,26 @@ fn encode_memories(
     let mut data_section = we::DataSection::new();
 
     for (hl_memory_idx, memory) in module.memories() {
-        let ll_memory_idx = if memory.import.is_none() {
+        if memory.import.is_none() {
             memory_section.memory(we::MemoryType::from(memory.limits));
             state.insert_memory_idx(hl_memory_idx)
         } else {
             state.map_memory_idx(hl_memory_idx)?
         };
 
-        for data in &memory.data {
-            let ll_offset = encode_single_instruction_with_end(&data.offset, state)?;
-            let ll_data = data.bytes.iter().copied();
-            data_section.active(ll_memory_idx.to_u32(), &ll_offset, ll_data);
+        for (hl_data_idx, data) in module.datas() {
+            state.insert_data_idx(hl_data_idx);
+            match &data.mode {
+                DataMode::Passive => {
+                    let ll_data = data.init.iter().copied();
+                    data_section.passive(ll_data);
+                }
+                DataMode::Active { memory, offset } => {
+                    let ll_offset = encode_single_instruction_with_end(&offset, state)?;
+                    let ll_data = data.init.iter().copied();
+                    data_section.active(memory.to_u32(), &ll_offset, ll_data);
+                }
+            }
         }
     }
 

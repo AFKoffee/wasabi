@@ -335,20 +335,13 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                 section_offsets.push((SectionId::Data, reader.range().start));
 
                 for elem in reader.into_iter_with_offsets() {
-                    let (data_offset, data) = elem?;
+                    let (_data_offset, data) = elem?;
 
                     match data.kind {
                         wp::DataKind::Active {
                             memory_index,
                             offset_expr,
                         } => {
-                            let memory = module
-                                .memories
-                                .get_mut(u32_to_usize(memory_index))
-                                .ok_or_else(|| {
-                                    ParseIssue::index(data_offset, memory_index, "memory")
-                                })?;
-
                             // Most offset expressions are just a constant and the end instruction.
                             let mut offset_instrs = Vec::with_capacity(2);
                             for op_offset in
@@ -358,15 +351,17 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                                 offset_instrs.push(parse_instr(op, offset, &types, &metadata)?)
                             }
 
-                            memory.data.push(Data {
-                                offset: offset_instrs,
-                                bytes: data.data.to_vec(),
+                            module.datas.push(Data {
+                                init: data.data.to_vec(),
+                                mode: DataMode::Active { memory: memory_index.into(), offset: offset_instrs }
                             })
                         }
-                        wp::DataKind::Passive => Err(ParseIssue::unsupported(
-                            data_offset,
-                            WasmExtension::BulkMemoryOperations,
-                        ))?,
+                        wp::DataKind::Passive => {
+                            module.datas.push(Data {
+                                init: data.data.to_vec(),
+                                mode: DataMode::Passive
+                            });
+                        },
                     }
                 }
             }
