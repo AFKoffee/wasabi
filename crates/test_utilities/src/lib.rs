@@ -149,11 +149,11 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
     let validate_output = Command::new("wasm-validate")
         .arg("--ignore-custom-section-errors")
         // Disable all extensions that we don't support yet.
-        // .arg("--disable-saturating-float-to-int")
+        .arg("--disable-saturating-float-to-int")
         // .arg("--disable-sign-extension")
-        // .arg("--disable-simd")
+        .arg("--disable-simd")
         // .arg("--disable-multi-value")
-        // .arg("--disable-bulk-memory")
+        .arg("--disable-bulk-memory")
         // .arg("--disable-reference-types")
         .arg(path)
         .output();
