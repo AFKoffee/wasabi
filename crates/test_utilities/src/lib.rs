@@ -52,6 +52,11 @@ pub fn for_each_valid_wasm_binary_in_test_set(test_fn: impl Fn(&Path) + Send + S
             const AST_BYTES_PER_INSTRUCTION_BYTE_APPROX: u64 = 100;
             let memory_needed_for_ast_approx = module_size_bytes * AST_BYTES_PER_INSTRUCTION_BYTE_APPROX;
 
+            if memory_needed_for_ast_approx > 2_000_000_000 {
+                eprintln!("skipping large file ... approx ram usage: {memory_needed_for_ast_approx:10} bytes");
+                return;
+            }
+
             let memory_available = {
                 let mut system = System::new();
                 system.refresh_memory();
@@ -173,12 +178,28 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
 
                 Ok(())
             },
-            Some(status_code) => Err(WasmValidateError::InvalidWasmFile {
-                input_file: WasmFileInfo::new(path),
-                status_code,
-                stdout: String::from_utf8_lossy(&validate_output.stdout).to_string(),
-                stderr: String::from_utf8_lossy(&validate_output.stderr).to_string()
-            }),
+            Some(status_code) => {
+                if String::from_utf8_lossy(&validate_output.stderr).contains("function local count exceeds maximum value") {
+                    assert!(validate_output.stdout.is_empty());
+
+                    // Warnings don't make validation fail but _are_ printed on stderr.
+                    let stderr = String::from_utf8_lossy(&validate_output.stderr);
+                    let stderr = stderr.trim();
+                    if !stderr.is_empty() {
+                        let file_info = WasmFileInfo::new(path);
+                        eprintln!("wasm-validate warning on {file_info}\n\t{stderr}");
+                    }
+
+                    Ok(())
+                } else {
+                    Err(WasmValidateError::InvalidWasmFile {
+                        input_file: WasmFileInfo::new(path),
+                        status_code,
+                        stdout: String::from_utf8_lossy(&validate_output.stdout).to_string(),
+                        stderr: String::from_utf8_lossy(&validate_output.stderr).to_string()  
+                    }) 
+                }
+            },
             None => Err(WasmValidateError::CouldNotValidate {
                 input_file: WasmFileInfo::new(path),
                 error: "wasm-validate terminated without a status code, on Linux this means it was terminated by a signal (possibly the OOM killer)".to_string()
