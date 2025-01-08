@@ -342,6 +342,7 @@ pub struct Module {
 
     pub elements: Vec<Element>,
 
+    pub data_count: Option<u32>,
     pub start: Option<Idx<Function>>,
 
     pub custom_sections: Vec<RawCustomSection>,
@@ -594,6 +595,7 @@ pub enum SectionId {
     Export,
     Start,
     Element,
+    DataCount,
     Code,
     Data,
     Custom(String),

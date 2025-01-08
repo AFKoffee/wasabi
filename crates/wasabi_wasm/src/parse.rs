@@ -330,10 +330,7 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                     }
                 }
             }
-            wp::Payload::DataCountSection { count: _, range } => Err(ParseIssue::unsupported(
-                range.start,
-                WasmExtension::BulkMemoryOperations,
-            ))?,
+            wp::Payload::DataCountSection { count, range: _ } => module.data_count = Some(count),
             wp::Payload::DataSection(reader) => {
                 section_offsets.push((SectionId::Data, reader.range().start));
 

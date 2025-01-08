@@ -138,6 +138,7 @@ pub fn encode_module(module: &Module) -> Result<Vec<u8>, EncodeError> {
     let function_section = encode_functions(module, &mut state);
     let (table_section, element_section) = encode_tables(module, &mut state)?;
     let (memory_section, data_section) = encode_memories(module, &mut state)?;
+    let data_count_section = module.data_count.map(|count| we::DataCountSection { count });
     let global_section = encode_globals(module, &mut state)?;
 
     // The code section can also contain types we haven't seen so far (e.g., in `call_indirect`),
@@ -203,6 +204,11 @@ pub fn encode_module(module: &Module) -> Result<Vec<u8>, EncodeError> {
         encoder.section(&element_section);
     }
     state.last_encoded_section = Some(SectionId::Element);
+    encode_and_insert_custom(&mut encoder, &mut state, module);
+    if let Some(data_count_section) = data_count_section {
+        encoder.section(&data_count_section);
+    }
+    state.last_encoded_section = Some(SectionId::DataCount);
     encode_and_insert_custom(&mut encoder, &mut state, module);
     if !code_section.is_empty() {
         encoder.section(&code_section);
