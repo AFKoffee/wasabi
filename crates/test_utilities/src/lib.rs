@@ -52,6 +52,7 @@ pub fn for_each_valid_wasm_binary_in_test_set(test_fn: impl Fn(&Path) + Send + S
             const AST_BYTES_PER_INSTRUCTION_BYTE_APPROX: u64 = 100;
             let memory_needed_for_ast_approx = module_size_bytes * AST_BYTES_PER_INSTRUCTION_BYTE_APPROX;
 
+            // Workaround to fully run the test suite on a 32 GB RAM machine
             if memory_needed_for_ast_approx > 2_000_000_000 {
                 eprintln!("skipping large file ... approx ram usage: {memory_needed_for_ast_approx:10} bytes");
                 return;
@@ -179,6 +180,10 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
                 Ok(())
             },
             Some(status_code) => {
+                // Explicitly ignore this error as this is present throughout the whole test suite
+                // It comes from the wasm-validate tool. Specifically this line in the source code:
+                //      https://github.com/WebAssembly/wabt/blob/ea193b40d6d4a1a697d68ae855b2b3b3e263b377/src/binary-reader-ir.cc#L808
+                // TODO: Further investigate this ... most likely, the instrumentation has to be refactored to create less locals somehow
                 if String::from_utf8_lossy(&validate_output.stderr).contains("function local count exceeds maximum value") {
                     assert!(validate_output.stdout.is_empty());
 
