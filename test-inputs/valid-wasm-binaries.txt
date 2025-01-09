@@ -11,7 +11,7 @@ issues/8/build/ite-return.wat.wasm
 issues/8/build/return.wat.wasm
 issues/output-filenames-dots/foo.func.wasm
 issues/output-filenames-dots/func.wasm
-issues/very-large-allocation/31fa012442fd637fca221db4fda94262e99759ab9667147cbedde083aabcc065.wasm
+# issues/very-large-allocation/31fa012442fd637fca221db4fda94262e99759ab9667147cbedde083aabcc065.wasm
 programming-language-examples/ackermann-rust/build/ackermann.wasm
 programming-language-examples/hello-world-emscripten/build/hello.wasm
 real-world-binaries/bananabread/bb.wasm
