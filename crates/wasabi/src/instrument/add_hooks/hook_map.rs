@@ -149,6 +149,9 @@ impl HookMap {
 
             MemorySize(_) => Hook::new(&ll_name, args!(currentSizePages: I32), &ll_name, "currentSizePages"),
             MemoryGrow(_) => Hook::new(&ll_name, args!(deltaPages: I32, previousSizePages: I32), &ll_name, "deltaPages, previousSizePages"),
+            MemoryFill =>  Hook::new(&ll_name, args!(size: I32, value: I32, destination: I32), &ll_name, "size, value, destination"),
+            MemoryCopy =>  Hook::new(&ll_name, args!(size: I32, source: I32, destination: I32), &ll_name, "size, source, destination"),
+            MemoryInit(_) =>  Hook::new(&ll_name, args!(size: I32, offset: I32, destination: I32), &ll_name, "size, offset, destination"),
 
             TableSize(_) => Hook::new(&ll_name, args!(size: I32), &ll_name, "size"),
             TableCopy(_, _) => Hook::new(&ll_name, args!(size: I32, source: I32, destination: I32), &ll_name, "size, source, destination"),
@@ -291,7 +294,7 @@ impl HookMap {
                 Hook::new(ll_name, args, "ref.is_null", js_args)
             }
 
-            RefFunc(_) | RefNull(_) | ElemDrop(_) => todo!("instrumentation not supported!"),
+            RefFunc(_) | RefNull(_) | ElemDrop(_) | DataDrop(_) => todo!("instrumentation not supported!"),
             }
         };
 

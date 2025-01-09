@@ -840,19 +840,25 @@ fn parse_instr(
             WasmExtension::NontrappingFloatToInt,
         ))?,
 
-        wp::MemoryInit {
-            data_index: _,
-            mem: _,
+        wp::MemoryInit { data_index, mem } => {
+            if mem != 0 {
+                Err(ParseIssue::unsupported(offset, WasmExtension::MultiMemory))?
+            }
+            MemoryInit(data_index.into())
         }
-        | wp::DataDrop { data_index: _ }
-        | wp::MemoryCopy {
-            dst_mem: _,
-            src_mem: _,
+        wp::MemoryCopy { dst_mem, src_mem } => {
+            if dst_mem != 0 || src_mem != 0 {
+                Err(ParseIssue::unsupported(offset, WasmExtension::MultiMemory))?
+            }
+            MemoryCopy
         }
-        | wp::MemoryFill { mem: _ } => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::BulkMemoryOperations,
-        ))?,
+        wp::MemoryFill { mem } => {
+            if mem != 0 {
+                Err(ParseIssue::unsupported(offset, WasmExtension::MultiMemory))?
+            }
+            MemoryFill
+        }
+        wp::DataDrop { data_index } => DataDrop(data_index.into()),
 
         wp::TableInit { elem_index, table } => TableInit(table.into(), elem_index.into()),
         wp::ElemDrop { elem_index } => ElemDrop(elem_index.into()),

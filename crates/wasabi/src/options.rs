@@ -112,6 +112,9 @@ pub enum Hook {
     TableFill,
     TableCopy,
     TableInit,
+    MemoryFill,
+    MemoryCopy,
+    MemoryInit,
 }
 
 // Use serde_plain for parsing strings to enum variants.

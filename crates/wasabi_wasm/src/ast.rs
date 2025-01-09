@@ -785,9 +785,14 @@ pub enum Instr {
     Load(LoadOp, Memarg),
     Store(StoreOp, Memarg),
 
-    // TODO: remove Idx<Memory>, always 0 in MVP.
     MemorySize(Idx<Memory>),
     MemoryGrow(Idx<Memory>),
+
+    // Note: we dont need the memory idx in these instructions for now as we don't support multi-memory
+    MemoryFill,
+    MemoryCopy,
+    MemoryInit(Idx<Data>),
+    DataDrop(Idx<Data>),
 
     Const(Val),
     Unary(UnaryOp),
@@ -1620,6 +1625,10 @@ impl Instr {
 
             MemorySize(_) => "memory.size",
             MemoryGrow(_) => "memory.grow",
+            MemoryFill => "memory.fill",
+            MemoryCopy => "memory.copy",
+            MemoryInit(_) => "memory.init",
+            DataDrop(_) => "data.drop",
 
             Const(Val::I32(_)) => "i32.const",
             Const(Val::I64(_)) => "i64.const",
@@ -1648,8 +1657,13 @@ impl Instr {
             Nop => Some(FunctionType::new(&[], &[])),
             Load(ref op, _) => Some(op.to_type()),
             Store(ref op, _) => Some(op.to_type()),
+
             MemorySize(_) => Some(FunctionType::new(&[], &[I32])),
             MemoryGrow(_) => Some(FunctionType::new(&[I32], &[I32])),
+            MemoryFill => Some(FunctionType::new(&[I32, I32, I32], &[])),
+            MemoryCopy | MemoryInit(_) => Some(FunctionType::new(&[I32, I32, I32], &[])),
+            DataDrop(_) => Some(FunctionType::new(&[], &[])),
+
             Const(ref val) => Some(FunctionType::new(&[], &[val.to_type()])),
             Unary(ref op) => Some(op.to_type()),
             Binary(ref op) => Some(op.to_type()),
@@ -1790,7 +1804,7 @@ impl fmt::Display for Instr {
         match self {
             // instructions without arguments
             Unreachable | Nop | Drop | Select | Return | Else | End | MemorySize(_)
-            | MemoryGrow(_) | Unary(_) | Binary(_) | RefIsNull => Ok(()),
+            | MemoryGrow(_) | Unary(_) | Binary(_) | RefIsNull | MemoryFill | MemoryCopy => Ok(()),
 
             Block(ty) | Loop(ty) | If(ty) => write!(f, " {ty}"),
 
@@ -1839,6 +1853,9 @@ impl fmt::Display for Instr {
             TableCopy(table_idx_1, table_idx_2) => write!(f, " {table_idx_1:?}, {table_idx_2:?}"),
             TableInit(table_idx, element_idx) => write!(f, " {table_idx:?}, {element_idx:?}"),
             ElemDrop(element_idx) => write!(f, " {element_idx:?}"),
+
+            MemoryInit(data_idx) => write!(f, " {data_idx:?}"),
+            DataDrop(data_idx) => write!(f, " {data_idx:?}")
         }
     }
 }

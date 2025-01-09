@@ -777,7 +777,37 @@ pub fn add_hooks(
                     } else {
                         instrumented_body.push(instr);
                     }
-                }
+                },
+                MemoryFill  => {
+                    let ty = instr.simple_type().unwrap();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::MemoryFill) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                },
+                MemoryCopy => {
+                    let ty = instr.simple_type().unwrap();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::MemoryCopy) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                },
+                MemoryInit(_) => {
+                    let ty = instr.simple_type().unwrap();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::MemoryInit) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                },
 
                 /* rest are "grouped instructions", i.e., where many instructions can be handled in a similar manner */
 
@@ -899,6 +929,9 @@ pub fn add_hooks(
                     instrumented_body.push(instr.clone());
                 },
                 ElemDrop(_) => {
+                    instrumented_body.push(instr.clone());
+                },
+                DataDrop(_) => {
                     instrumented_body.push(instr.clone());
                 }
             }

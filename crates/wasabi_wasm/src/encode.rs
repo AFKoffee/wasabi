@@ -560,7 +560,7 @@ fn encode_instruction(
             dst_table: state.map_element_idx(element_idx)?.to_u32() 
         },
         Instr::ElemDrop(element_idx) => we::Instruction::ElemDrop(state.map_element_idx(element_idx)?.to_u32()),
-        
+
         Instr::Local(LocalOp::Get, local_idx) => we::Instruction::LocalGet(local_idx.to_u32()),
         Instr::Local(LocalOp::Set, local_idx) => we::Instruction::LocalSet(local_idx.to_u32()),
         Instr::Local(LocalOp::Tee, local_idx) => we::Instruction::LocalTee(local_idx.to_u32()),
@@ -602,6 +602,14 @@ fn encode_instruction(
         Instr::MemoryGrow(memory_idx) => {
             we::Instruction::MemoryGrow(state.map_memory_idx(memory_idx)?.to_u32())
         }
+        
+        Instr::MemoryFill => we::Instruction::MemoryFill(0),
+        Instr::MemoryCopy => we::Instruction::MemoryCopy { src_mem: 0, dst_mem: 0 },
+        Instr::MemoryInit(data_idx) => we::Instruction::MemoryInit { 
+            mem: 0, 
+            data_index: state.map_data_idx(data_idx)?.to_u32() 
+        },
+        Instr::DataDrop(data_idx) => we::Instruction::DataDrop(state.map_data_idx(data_idx)?.to_u32()),
 
         Instr::Const(Val::I32(value)) => we::Instruction::I32Const(value),
         Instr::Const(Val::I64(value)) => we::Instruction::I64Const(value),
