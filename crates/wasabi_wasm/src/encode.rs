@@ -358,36 +358,36 @@ fn encode_tables(
         } else {
             state.map_table_idx(hl_table_idx)?
         };
+    }
 
-        for (hl_element_idx, element) in module.elements() {
-            state.insert_element_idx(hl_element_idx);
-            let element_type = match element.typ {
-                RefType::FuncRef => we::ValType::FuncRef,
-                RefType::ExternRef => we::ValType::ExternRef,
-            };
-            let expr = element
-                .init
-                .iter()
-                .map(|instrs| -> Result<ConstExpr, EncodeError> {
-                    Ok(encode_single_instruction_with_end(instrs, state)?)
-                })
-                .map(|expr| expr.map_err(|e| e.into()))
-                .collect::<Result<Vec<ConstExpr>, EncodeError>>()?;
-            let elements = we::Elements::Expressions(&expr);
-            match &element.mode {
-                ElementMode::Passive => element_section.passive(element_type, elements),
-                ElementMode::Active { table, offset } => {
-                    let ll_offset = encode_single_instruction_with_end(&offset, state)?;
-                    element_section.active(
-                        Some(state.map_table_idx(*table)?.to_u32()),
-                        &ll_offset,
-                        element_type,
-                        elements,
-                    )
-                }
-                ElementMode::Declarative => element_section.declared(element_type, elements),
-            };
-        }
+    for (hl_element_idx, element) in module.elements() {
+        state.insert_element_idx(hl_element_idx);
+        let element_type = match element.typ {
+            RefType::FuncRef => we::ValType::FuncRef,
+            RefType::ExternRef => we::ValType::ExternRef,
+        };
+        let expr = element
+            .init
+            .iter()
+            .map(|instrs| -> Result<ConstExpr, EncodeError> {
+                Ok(encode_single_instruction_with_end(instrs, state)?)
+            })
+            .map(|expr| expr.map_err(|e| e.into()))
+            .collect::<Result<Vec<ConstExpr>, EncodeError>>()?;
+        let elements = we::Elements::Expressions(&expr);
+        match &element.mode {
+            ElementMode::Passive => element_section.passive(element_type, elements),
+            ElementMode::Active { table, offset } => {
+                let ll_offset = encode_single_instruction_with_end(&offset, state)?;
+                element_section.active(
+                    Some(state.map_table_idx(*table)?.to_u32()),
+                    &ll_offset,
+                    element_type,
+                    elements,
+                )
+            }
+            ElementMode::Declarative => element_section.declared(element_type, elements),
+        };
     }
 
     Ok((table_section, element_section))
@@ -546,7 +546,7 @@ fn encode_instruction(
         Instr::TypedSelect(ty) => we::Instruction::TypedSelect(ty.into()),
 
         Instr::TableGet(table_idx) => we::Instruction::TableGet(state.map_table_idx(table_idx)?.to_u32()),
-        Instr::TableSet(table_idx) => we::Instruction::TableGet(state.map_table_idx(table_idx)?.to_u32()),
+        Instr::TableSet(table_idx) => we::Instruction::TableSet(state.map_table_idx(table_idx)?.to_u32()),
         Instr::TableSize(table_idx) => we::Instruction::TableSize(state.map_table_idx(table_idx)?.to_u32()),
         Instr::TableGrow(table_idx) => we::Instruction::TableGrow(state.map_table_idx(table_idx)?.to_u32()),
 
@@ -555,9 +555,9 @@ fn encode_instruction(
             src_table: state.map_table_idx(idx_1)?.to_u32(), 
             dst_table: state.map_table_idx(idx_2)?.to_u32() 
         },
-        Instr::TableInit(table_idx, element_idx) => we::Instruction::TableCopy { 
-            src_table: state.map_table_idx(table_idx)?.to_u32(), 
-            dst_table: state.map_element_idx(element_idx)?.to_u32() 
+        Instr::TableInit(table_idx, element_idx) => we::Instruction::TableInit { 
+            table: state.map_table_idx(table_idx)?.to_u32(), 
+            elem_index: state.map_element_idx(element_idx)?.to_u32() 
         },
         Instr::ElemDrop(element_idx) => we::Instruction::ElemDrop(state.map_element_idx(element_idx)?.to_u32()),
 
