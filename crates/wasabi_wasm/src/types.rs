@@ -830,6 +830,34 @@ fn check_instr(
             state.push_vals(function_ty.results())?;
             to_inferred_type(function_ty)
         }
+        TableGet(idx) => {
+            let ref_ty = module.table(*idx).ref_type;
+            let function_ty = FunctionType::new(&[ValType::I32], &[ValType::Ref(ref_ty)]);
+            state.pop_vals_expected(function_ty.inputs())?;
+            state.push_vals(function_ty.results())?;
+            to_inferred_type(function_ty)
+        }
+        TableSet(idx) => {
+            let ref_ty = module.table(*idx).ref_type;
+            let function_ty = FunctionType::new(&[ValType::I32, ValType::Ref(ref_ty)], &[]);
+            state.pop_vals_expected(function_ty.inputs())?;
+            state.push_vals(function_ty.results())?;
+            to_inferred_type(function_ty)
+        }
+        TableGrow(idx) => {
+            let ref_ty = module.table(*idx).ref_type;
+            let function_ty = FunctionType::new(&[ValType::Ref(ref_ty), ValType::I32], &[ValType::I32]);
+            state.pop_vals_expected(function_ty.inputs())?;
+            state.push_vals(function_ty.results())?;
+            to_inferred_type(function_ty)
+        },
+        TableFill(idx) => {
+            let ref_ty = module.table(*idx).ref_type;
+            let function_ty = FunctionType::new(&[ValType::I32, ValType::Ref(ref_ty), ValType::I32], &[]);
+            state.pop_vals_expected(function_ty.inputs())?;
+            state.push_vals(function_ty.results())?;
+            to_inferred_type(function_ty)
+        }
 
         // Value-polymorphic instructions:
         Drop => {

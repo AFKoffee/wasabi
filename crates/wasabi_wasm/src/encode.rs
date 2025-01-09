@@ -545,11 +545,22 @@ fn encode_instruction(
         Instr::Select => we::Instruction::Select,
         Instr::TypedSelect(ty) => we::Instruction::TypedSelect(ty.into()),
 
-        Instr::TableGet(table_idx) => we::Instruction::TableGet(table_idx.to_u32()),
-        Instr::TableSet(table_idx) => we::Instruction::TableGet(table_idx.to_u32()),
-        Instr::TableSize(table_idx) => we::Instruction::TableSize(table_idx.to_u32()),
-        Instr::TableGrow(table_idx) => we::Instruction::TableGrow(table_idx.to_u32()),
+        Instr::TableGet(table_idx) => we::Instruction::TableGet(state.map_table_idx(table_idx)?.to_u32()),
+        Instr::TableSet(table_idx) => we::Instruction::TableGet(state.map_table_idx(table_idx)?.to_u32()),
+        Instr::TableSize(table_idx) => we::Instruction::TableSize(state.map_table_idx(table_idx)?.to_u32()),
+        Instr::TableGrow(table_idx) => we::Instruction::TableGrow(state.map_table_idx(table_idx)?.to_u32()),
 
+        Instr::TableFill(table_idx) => we::Instruction::TableFill(state.map_table_idx(table_idx)?.to_u32()),
+        Instr::TableCopy(idx_1, idx_2) => we::Instruction::TableCopy { 
+            src_table: state.map_table_idx(idx_1)?.to_u32(), 
+            dst_table: state.map_table_idx(idx_2)?.to_u32() 
+        },
+        Instr::TableInit(table_idx, element_idx) => we::Instruction::TableCopy { 
+            src_table: state.map_table_idx(table_idx)?.to_u32(), 
+            dst_table: state.map_element_idx(element_idx)?.to_u32() 
+        },
+        Instr::ElemDrop(element_idx) => we::Instruction::ElemDrop(state.map_element_idx(element_idx)?.to_u32()),
+        
         Instr::Local(LocalOp::Get, local_idx) => we::Instruction::LocalGet(local_idx.to_u32()),
         Instr::Local(LocalOp::Set, local_idx) => we::Instruction::LocalSet(local_idx.to_u32()),
         Instr::Local(LocalOp::Tee, local_idx) => we::Instruction::LocalTee(local_idx.to_u32()),

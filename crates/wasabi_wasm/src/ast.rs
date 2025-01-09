@@ -771,6 +771,11 @@ pub enum Instr {
     TableSize(Idx<Table>),
     TableGrow(Idx<Table>),
 
+    TableFill(Idx<Table>),
+    TableCopy(Idx<Table>, Idx<Table>),
+    TableInit(Idx<Table>, Idx<Element>),
+    ElemDrop(Idx<Element>),
+
     // TODO: Get rid of all locals by using block params and results only + a pick or copy
     // instruction, that copies the nth value on the stack to the top.
     // Benefit: fully in SSA form, decoalesced locals, liveness information explicit.
@@ -1602,6 +1607,10 @@ impl Instr {
             TableSet(_) => "table.set",
             TableSize(_) => "table.size",
             TableGrow(_) => "table.grow",
+            TableFill(_) => "table.fill",
+            TableCopy(_, _) => "table.copy",
+            TableInit(_, _) => "table.init",
+            ElemDrop(_) => "elem.drop",
 
             Local(LocalOp::Get, _) => "local.get",
             Local(LocalOp::Set, _) => "local.set",
@@ -1670,7 +1679,11 @@ impl Instr {
             TableGet(_) => None,
             TableSet(_) => None,
             TableSize(_) => Some(FunctionType::new(&[], &[I32])),
-            TableGrow(_) => None
+            TableGrow(_) => None,
+            TableFill(_) => None,
+            TableCopy(_, _) => Some(FunctionType::new(&[I32, I32, I32], &[])),
+            TableInit(_, _) => Some(FunctionType::new(&[I32, I32, I32], &[])),
+            ElemDrop(_) => Some(FunctionType::new(&[], &[]))
         }
     }
 }
@@ -1821,6 +1834,11 @@ impl fmt::Display for Instr {
             TableSet(table_idx) => write!(f, " {table_idx:?}"),
             TableSize(table_idx) => write!(f, " {table_idx:?}"),
             TableGrow(table_idx) => write!(f, " {table_idx:?}"),
+
+            TableFill(table_idx) => write!(f, " {table_idx:?}"),
+            TableCopy(table_idx_1, table_idx_2) => write!(f, " {table_idx_1:?}, {table_idx_2:?}"),
+            TableInit(table_idx, element_idx) => write!(f, " {table_idx:?}, {element_idx:?}"),
+            ElemDrop(element_idx) => write!(f, " {element_idx:?}"),
         }
     }
 }

@@ -849,24 +849,15 @@ fn parse_instr(
             dst_mem: _,
             src_mem: _,
         }
-        | wp::MemoryFill { mem: _ }
-        | wp::TableInit {
-            elem_index: _,
-            table: _,
-        }
-        | wp::ElemDrop { elem_index: _ }
-        | wp::TableCopy {
-            dst_table: _,
-            src_table: _,
-        } => Err(ParseIssue::unsupported(
+        | wp::MemoryFill { mem: _ } => Err(ParseIssue::unsupported(
             offset,
             WasmExtension::BulkMemoryOperations,
         ))?,
 
-        wp::TableFill { table: _ } => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::BulkMemoryOperations,
-        ))?,
+        wp::TableInit { elem_index, table } => TableInit(table.into(), elem_index.into()),
+        wp::ElemDrop { elem_index } => ElemDrop(elem_index.into()),
+        wp::TableCopy { dst_table, src_table } => TableCopy(dst_table.into(), src_table.into()),
+        wp::TableFill { table } => TableFill(table.into()),
 
         wp::TableGet { table } => TableGet(table.into()),
         wp::TableSet { table } => TableSet(table.into()),

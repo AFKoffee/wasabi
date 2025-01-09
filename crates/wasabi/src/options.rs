@@ -109,6 +109,9 @@ pub enum Hook {
     TableSet,
     TableSize,
     TableGrow,
+    TableFill,
+    TableCopy,
+    TableInit,
 }
 
 // Use serde_plain for parsing strings to enum variants.
