@@ -11,6 +11,7 @@ issues/8/build/ite-return.wat.wasm
 issues/8/build/return.wat.wasm
 issues/output-filenames-dots/foo.func.wasm
 issues/output-filenames-dots/func.wasm
+issues/very-large-allocation/31fa012442fd637fca221db4fda94262e99759ab9667147cbedde083aabcc065.wasm
 programming-language-examples/ackermann-rust/build/ackermann.wasm
 programming-language-examples/hello-world-emscripten/build/hello.wasm
 real-world-binaries/bananabread/bb.wasm
@@ -68,7 +69,9 @@ wasm-spec-tests/build/binary-leb128.wasm
 wasm-spec-tests/build/binary.wasm
 wasm-spec-tests/build/block.wasm
 wasm-spec-tests/build/br_if.wasm
+wasm-spec-tests/build/br_table.wasm
 wasm-spec-tests/build/br.wasm
+wasm-spec-tests/build/bulk.wasm
 wasm-spec-tests/build/call_indirect.wasm
 wasm-spec-tests/build/call.wasm
 wasm-spec-tests/build/comments.wasm
@@ -107,13 +110,19 @@ wasm-spec-tests/build/local_get.wasm
 wasm-spec-tests/build/local_set.wasm
 wasm-spec-tests/build/local_tee.wasm
 wasm-spec-tests/build/loop.wasm
+wasm-spec-tests/build/memory_copy.wasm
+wasm-spec-tests/build/memory_fill.wasm
 wasm-spec-tests/build/memory_grow.wasm
+wasm-spec-tests/build/memory_init.wasm
 wasm-spec-tests/build/memory_redundancy.wasm
 wasm-spec-tests/build/memory_size.wasm
 wasm-spec-tests/build/memory_trap.wasm
 wasm-spec-tests/build/memory.wasm
 wasm-spec-tests/build/names.wasm
 wasm-spec-tests/build/nop.wasm
+wasm-spec-tests/build/ref_func.wasm
+wasm-spec-tests/build/ref_is_null.wasm
+wasm-spec-tests/build/ref_null.wasm
 wasm-spec-tests/build/return.wasm
 wasm-spec-tests/build/select.wasm
 wasm-spec-tests/build/skip-stack-guard-page.wasm
@@ -121,6 +130,15 @@ wasm-spec-tests/build/stack.wasm
 wasm-spec-tests/build/start.wasm
 wasm-spec-tests/build/store.wasm
 wasm-spec-tests/build/switch.wasm
+wasm-spec-tests/build/table_copy.wasm
+wasm-spec-tests/build/table_fill.wasm
+wasm-spec-tests/build/table_get.wasm
+wasm-spec-tests/build/table_grow.wasm
+wasm-spec-tests/build/table_init.wasm
+wasm-spec-tests/build/table_set.wasm
+wasm-spec-tests/build/table_size.wasm
+wasm-spec-tests/build/table.wasm
+wasm-spec-tests/build/token.wasm
 wasm-spec-tests/build/traps.wasm
 wasm-spec-tests/build/type.wasm
 wasm-spec-tests/build/unreachable.wasm
@@ -1289,6 +1307,7 @@ WasmBench-dataset/filtered/245827425c0979c6fa43b191ab9a4a582bb36efbda582bcd6cbe0
 WasmBench-dataset/filtered/245b433f3a5837d4f44f7909fc983758f7decdeaee838a6c99da0eeb5872d348.wasm
 WasmBench-dataset/filtered/24784748a462aebde1a088fd6aa9029418f1fc028b34716e0ecf64e0e2935fc7.wasm
 WasmBench-dataset/filtered/247b9ac42bbfa1f34999155d216bce7f3c7fd464e50319ebb4148681808a12c4.wasm
+WasmBench-dataset/filtered/248d77ce13b0be02a51807a089dfa03205e673a71acabd81d9beb5ae4c8b56a1.wasm
 WasmBench-dataset/filtered/24aae13ae29d012fdf36cacc6871640f6883f07a0d42eea40cfe277950ca16c9.wasm
 WasmBench-dataset/filtered/24b5d4c5e04d2765118f4704c7b854726cc9f4685e65d6afd4fb13fc8913c45e.wasm
 WasmBench-dataset/filtered/24b61af148ef42937b50210d2b91e321d35b3b0e47e4c6be53934bd2b5d99181.wasm
@@ -1721,6 +1740,7 @@ WasmBench-dataset/filtered/31ca9395575b9645a2ddd0b8d29b59746e84d7caa6e4fe730666e
 WasmBench-dataset/filtered/31dcb7b4af39fba2ea427a466e363d586a8f1e4d13456708aa7e8002a9cee33d.wasm
 WasmBench-dataset/filtered/31de2a7475e4faa67763d198a78a1b8d97d1045328718afb6b3feca21fc0a2f6.wasm
 WasmBench-dataset/filtered/31e761bab73c317d1308b037de63d687cd8f164b67c446091ebce0181146b03d.wasm
+WasmBench-dataset/filtered/31fa012442fd637fca221db4fda94262e99759ab9667147cbedde083aabcc065.wasm
 WasmBench-dataset/filtered/31ff596703e3faf89cefa57feb7e47a7a59074dc53fe1615b3970502018afdf7.wasm
 WasmBench-dataset/filtered/320491cfcc576e94f8b81338cc42b7d1a694e91cca03ee4ad816e7a6173109ac.wasm
 WasmBench-dataset/filtered/320a42e0775e5da458a2a41c669557b0ba387c37e85d85c380160b1e40906c30.wasm
@@ -2921,6 +2941,7 @@ WasmBench-dataset/filtered/575054e77e0a4cabbe4d552a410dbf5ea08ab1ee6bdd5d191980c
 WasmBench-dataset/filtered/577276e95f4f43f59ecbcdaddc2d061eee449e97c902f1d63535183310368974.wasm
 WasmBench-dataset/filtered/5773ff17f035d0d70c17bff41f32568d7da651519bbd0764eb9bf6914d78725a.wasm
 WasmBench-dataset/filtered/5780fa61dd5e21627c0ce80185eb4dca549f3a63e3ffd9262f2c60e29acf393f.wasm
+WasmBench-dataset/filtered/5782ccb7bce726642c505c5c51d2ed9123d115de25f874d14337d6d194a37938.wasm
 WasmBench-dataset/filtered/57868ab3de1a8d9fb35d3e7d625a763b2db4b7b8eae2456f8a024dda22c955d8.wasm
 WasmBench-dataset/filtered/57997fe9b693e511f04edc028be93d122859483029bc1f1010dd5c5ba067b661.wasm
 WasmBench-dataset/filtered/579d12e980cdef3ad60a4fd0dca6faed3985efdd642352662549b74fa85c52f3.wasm
@@ -3111,6 +3132,7 @@ WasmBench-dataset/filtered/5d94f6773ae99d61576d763fc0ac4b21b646c8d241613ed667db0
 WasmBench-dataset/filtered/5d9de988d32649b89b777ee044bc7c57c4f5df0770bd19a0c0889ff487e2f3ac.wasm
 WasmBench-dataset/filtered/5da5d2d3a5293b261550f9b6271c0debdba5f97af83eebb8598eed27e9bd8ea2.wasm
 WasmBench-dataset/filtered/5da6f75e68cd1e69449862e101a8bc6f798a63d7856c6f177bb626470a50955a.wasm
+WasmBench-dataset/filtered/5da873c7eff9ddd4769471706dbfb11bc10cb1d1378c728ea57ed6228fb3a292.wasm
 WasmBench-dataset/filtered/5dab623c33dfd876f2933a864bc41d9f7602f3d2c23db9dbbdb9ab06ff312895.wasm
 WasmBench-dataset/filtered/5db219e92458772a462f79951629ea33d6fb4fd1673e9879f5af89f355dadadf.wasm
 WasmBench-dataset/filtered/5db88e33e9f0599c404e9b22ba28b7965d2384e2e1d2159b75130ac940cc7a7c.wasm
@@ -3158,6 +3180,7 @@ WasmBench-dataset/filtered/5ef9d60f9073d1ef433283418490930395fdae97e22ef3a417996
 WasmBench-dataset/filtered/5f0a1013883d497d8196f552e1d45c6be9b140ad1c12cb9f8a6a4b709c68df5a.wasm
 WasmBench-dataset/filtered/5f0ef71b41909d25b39a42f234f1b55311a8df1f3e9588f5663080a13df25950.wasm
 WasmBench-dataset/filtered/5f316dfdca8e562357a351356be11a4a3f33d2a39fee73c3c08f59cdd852a2ed.wasm
+WasmBench-dataset/filtered/5f41494cd96e101758b1812196e53c78cf08f7402ab9dd88f1b7ccad8bcca451.wasm
 WasmBench-dataset/filtered/5f48cd3cd3110063caf8f7f0e5c0d55ca7fdfbb1cfadaec87384bc9f9998944c.wasm
 WasmBench-dataset/filtered/5f4a1f3e03322cfa396901335af75972f5323a4f244f2a0e1c6af5b787a0699d.wasm
 WasmBench-dataset/filtered/5f53b20c99edab4a52bf5fb2c3f3c4365ccae937466215e524d487cf656f4d2d.wasm
@@ -3608,6 +3631,7 @@ WasmBench-dataset/filtered/6bdc3a41fd090c79ec603d833931c4ffadf2df5eefd9543d1aa21
 WasmBench-dataset/filtered/6be29148a73eecf80f1f36a4a0c2dcb12dd437afdfdd20fde86e7e9149d162a0.wasm
 WasmBench-dataset/filtered/6be6bbfb19daf436b4e80873bfbe6108ff63a958c58b1c1373922e77f29df527.wasm
 WasmBench-dataset/filtered/6bf4f7ec124d848722bf7b0e4e1f0ee9878ae13a9181968b5adc91ef08f4339a.wasm
+WasmBench-dataset/filtered/6bfe138f24fe3a3ee4ace5d9a070951ed9673c329b92819277c399db3e809e87.wasm
 WasmBench-dataset/filtered/6c07c413b91c3cea806378a1e936c8769edd2dbea10a2f76aefd02eceab8d15b.wasm
 WasmBench-dataset/filtered/6c09552c4b5f4a8be2973614284d8dee814dc8dbf46ee28e4635324f8a50ee38.wasm
 WasmBench-dataset/filtered/6c0d406bdbdf3e9d731abb7cd6588ecd60c3e5d78e3c0d53d169f993af1efef4.wasm
@@ -4410,6 +4434,7 @@ WasmBench-dataset/filtered/83e12c5e9c173cf3d014bca106f325fd5d7c0ef9211d197854e70
 WasmBench-dataset/filtered/83e1d34a6f86007b1dff4c6a8b21e2bb424c5bb37cc3f18ad6dbf6c4947b2a4c.wasm
 WasmBench-dataset/filtered/83efbdd91935909d583101190789f906cda8f647379cba9da67c0d7f665381ef.wasm
 WasmBench-dataset/filtered/83f3fef32a6abf487e5d81de89181283575e00704b638d5f3f24042c219d2ebe.wasm
+WasmBench-dataset/filtered/83fd139ac6555d825a7445acb28763233681a34be200b84c9beef3d263faa81d.wasm
 WasmBench-dataset/filtered/8400370babf6b0077208a33580c4fdf15773f4f39340bdc7983070fcc8426afb.wasm
 WasmBench-dataset/filtered/8418cfcd7d9884f14ab37b9bcea773d1c8a2c165c82f59973d38e761d322e010.wasm
 WasmBench-dataset/filtered/84217ca10afac622d53885b59101d512721a4ac74cae92f43106ffdcc876213d.wasm
@@ -7282,6 +7307,7 @@ WasmBench-dataset/filtered/d94aa9bd06427b0c5aa41d18192df57d52dc1f1b97e227e9e5d82
 WasmBench-dataset/filtered/d950350beef03b7e85d3e3766eeb1fa7938006a37e750bbdc852ee6197ee50ee.wasm
 WasmBench-dataset/filtered/d95689d724d1609951f3641a688b63f2a63f5d5dc39cd5b8790b5a24e32521ea.wasm
 WasmBench-dataset/filtered/d969152a0ced4d139a6e9e6b826674104390b5c8fe1af210864dc922dfbe738f.wasm
+WasmBench-dataset/filtered/d96b5af52704a4f48a6c3f9b11ed425f5453107bd923386d4b931f549f761d8a.wasm
 WasmBench-dataset/filtered/d97279ae9297cba7e241c7e7963f1bfe8ef513f2d34f8864c34227f90af35de7.wasm
 WasmBench-dataset/filtered/d976ed60dd10bc3313dfaafb6d088e1d34223e99d2d7ab34c9ece0f5906a6b67.wasm
 WasmBench-dataset/filtered/d97a84dcf49483c17d955e2b7725f3734125aef516919629c92a0e974ea023e0.wasm

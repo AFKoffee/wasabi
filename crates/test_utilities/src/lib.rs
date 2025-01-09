@@ -159,7 +159,7 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
         // .arg("--disable-sign-extension")
         .arg("--disable-simd")
         // .arg("--disable-multi-value")
-        .arg("--disable-bulk-memory")
+        // .arg("--disable-bulk-memory")
         // .arg("--disable-reference-types")
         .arg(path)
         .output();
