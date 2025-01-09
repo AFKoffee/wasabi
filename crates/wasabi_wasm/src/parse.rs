@@ -318,10 +318,11 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                                 }
                             })
                         }
-                        wp::ElementKind::Passive => Err(ParseIssue::unsupported(
-                            element_offset,
-                            WasmExtension::BulkMemoryOperations,
-                        ))?,
+                        wp::ElementKind::Passive => module.elements.push(Element {
+                            typ: refty,
+                            init: items,
+                            mode: ElementMode::Passive,
+                        }),
                         wp::ElementKind::Declared => module.elements.push(Element {
                             typ: refty,
                             init: items,
