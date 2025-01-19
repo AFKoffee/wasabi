@@ -149,8 +149,13 @@ impl HookMap {
 
             MemorySize(_) => Hook::new(&ll_name, args!(currentSizePages: I32), &ll_name, "currentSizePages"),
             MemoryGrow(_) => Hook::new(&ll_name, args!(deltaPages: I32, previousSizePages: I32), &ll_name, "deltaPages, previousSizePages"),
+            MemoryFill =>  Hook::new(&ll_name, args!(size: I32, value: I32, destination: I32), &ll_name, "size, value, destination"),
+            MemoryCopy =>  Hook::new(&ll_name, args!(size: I32, source: I32, destination: I32), &ll_name, "size, source, destination"),
+            MemoryInit(_) =>  Hook::new(&ll_name, args!(size: I32, offset: I32, destination: I32), &ll_name, "size, offset, destination"),
 
             TableSize(_) => Hook::new(&ll_name, args!(size: I32), &ll_name, "size"),
+            TableCopy(_, _) => Hook::new(&ll_name, args!(size: I32, source: I32, destination: I32), &ll_name, "size, source, destination"),
+            TableInit(_, _) => Hook::new(&ll_name, args!(size: I32, offset: I32, destination: I32), &ll_name, "size, offset, destination"),
 
             Load(op, _) => {
                 let ty = op.to_type().results()[0];
@@ -236,6 +241,13 @@ impl HookMap {
                 let js_args = &format!("\"{}\", {}", instr_name, args.iter().map(Arg::to_lowlevel_long_expr).collect::<Vec<_>>().join(", "));
                 Hook::new(ll_name, args, "table_grow", js_args)
             }
+            TableFill(_) => {
+                assert_eq!(polymorphic_tys.len(), 1, "table.fill has only one argument");
+                let args = args!(size: I32, value: polymorphic_tys[0], destination: I32);
+                let instr_name = instr.to_name();
+                let js_args = &format!("\"{}\", {}", instr_name, args.iter().map(Arg::to_lowlevel_long_expr).collect::<Vec<_>>().join(", "));
+                Hook::new(ll_name, args, "table_fill", js_args)
+            }
             Local(_, _) => {
                 assert_eq!(polymorphic_tys.len(), 1, "local instructions have only one argument");
                 let args = args!(index: I32, value: polymorphic_tys[0]);
@@ -282,7 +294,7 @@ impl HookMap {
                 Hook::new(ll_name, args, "ref.is_null", js_args)
             }
 
-            RefFunc(_) | RefNull(_) => todo!("instrumentation not supported!"),
+            RefFunc(_) | RefNull(_) | ElemDrop(_) | DataDrop(_) => todo!("instrumentation not supported!"),
             }
         };
 

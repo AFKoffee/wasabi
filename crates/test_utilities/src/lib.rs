@@ -7,6 +7,7 @@ use std::io;
 use std::io::BufRead;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 use indicatif::ParallelProgressIterator;
 use once_cell::sync::Lazy;
@@ -39,6 +40,8 @@ pub fn for_each_valid_wasm_binary_in_test_set(test_fn: impl Fn(&Path) + Send + S
     // Always make sure the progress bar is printed on a new line.
     eprintln!();
 
+    //let skip_count = Mutex::new(0);
+
     VALID_WASM_BINARIES
         .par_iter()
         // Abort parallel processing as early as possible.
@@ -53,10 +56,11 @@ pub fn for_each_valid_wasm_binary_in_test_set(test_fn: impl Fn(&Path) + Send + S
             let memory_needed_for_ast_approx = module_size_bytes * AST_BYTES_PER_INSTRUCTION_BYTE_APPROX;
 
             // Workaround to fully run the test suite on a 32 GB RAM machine
-            if memory_needed_for_ast_approx > 2_000_000_000 {
+            /*if memory_needed_for_ast_approx > 1_500_000_000 {
                 eprintln!("skipping large file ... approx ram usage: {memory_needed_for_ast_approx:10} bytes");
+                *skip_count.lock().unwrap() += 1;
                 return;
-            }
+            }*/
 
             let memory_available = {
                 let mut system = System::new();
@@ -70,6 +74,8 @@ pub fn for_each_valid_wasm_binary_in_test_set(test_fn: impl Fn(&Path) + Send + S
 
             test_fn(path)
         });
+
+    //eprintln!("\nSkipped {} files due to size.", *skip_count.lock().unwrap())
 }
 
 #[derive(Debug)]
@@ -159,7 +165,7 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
         // .arg("--disable-sign-extension")
         .arg("--disable-simd")
         // .arg("--disable-multi-value")
-        .arg("--disable-bulk-memory")
+        // .arg("--disable-bulk-memory")
         // .arg("--disable-reference-types")
         .arg(path)
         .output();

@@ -318,10 +318,11 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                                 }
                             })
                         }
-                        wp::ElementKind::Passive => Err(ParseIssue::unsupported(
-                            element_offset,
-                            WasmExtension::BulkMemoryOperations,
-                        ))?,
+                        wp::ElementKind::Passive => module.elements.push(Element {
+                            typ: refty,
+                            init: items,
+                            mode: ElementMode::Passive,
+                        }),
                         wp::ElementKind::Declared => module.elements.push(Element {
                             typ: refty,
                             init: items,
@@ -330,28 +331,18 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                     }
                 }
             }
-            wp::Payload::DataCountSection { count: _, range } => Err(ParseIssue::unsupported(
-                range.start,
-                WasmExtension::BulkMemoryOperations,
-            ))?,
+            wp::Payload::DataCountSection { count, range: _ } => module.data_count = Some(count),
             wp::Payload::DataSection(reader) => {
                 section_offsets.push((SectionId::Data, reader.range().start));
 
                 for elem in reader.into_iter_with_offsets() {
-                    let (data_offset, data) = elem?;
+                    let (_data_offset, data) = elem?;
 
                     match data.kind {
                         wp::DataKind::Active {
                             memory_index,
                             offset_expr,
                         } => {
-                            let memory = module
-                                .memories
-                                .get_mut(u32_to_usize(memory_index))
-                                .ok_or_else(|| {
-                                    ParseIssue::index(data_offset, memory_index, "memory")
-                                })?;
-
                             // Most offset expressions are just a constant and the end instruction.
                             let mut offset_instrs = Vec::with_capacity(2);
                             for op_offset in
@@ -361,15 +352,17 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                                 offset_instrs.push(parse_instr(op, offset, &types, &metadata)?)
                             }
 
-                            memory.data.push(Data {
-                                offset: offset_instrs,
-                                bytes: data.data.to_vec(),
+                            module.datas.push(Data {
+                                init: data.data.to_vec(),
+                                mode: DataMode::Active { memory: memory_index.into(), offset: offset_instrs }
                             })
                         }
-                        wp::DataKind::Passive => Err(ParseIssue::unsupported(
-                            data_offset,
-                            WasmExtension::BulkMemoryOperations,
-                        ))?,
+                        wp::DataKind::Passive => {
+                            module.datas.push(Data {
+                                init: data.data.to_vec(),
+                                mode: DataMode::Passive
+                            });
+                        },
                     }
                 }
             }
@@ -848,33 +841,30 @@ fn parse_instr(
             WasmExtension::NontrappingFloatToInt,
         ))?,
 
-        wp::MemoryInit {
-            data_index: _,
-            mem: _,
+        wp::MemoryInit { data_index, mem } => {
+            if mem != 0 {
+                Err(ParseIssue::unsupported(offset, WasmExtension::MultiMemory))?
+            }
+            MemoryInit(data_index.into())
         }
-        | wp::DataDrop { data_index: _ }
-        | wp::MemoryCopy {
-            dst_mem: _,
-            src_mem: _,
+        wp::MemoryCopy { dst_mem, src_mem } => {
+            if dst_mem != 0 || src_mem != 0 {
+                Err(ParseIssue::unsupported(offset, WasmExtension::MultiMemory))?
+            }
+            MemoryCopy
         }
-        | wp::MemoryFill { mem: _ }
-        | wp::TableInit {
-            elem_index: _,
-            table: _,
+        wp::MemoryFill { mem } => {
+            if mem != 0 {
+                Err(ParseIssue::unsupported(offset, WasmExtension::MultiMemory))?
+            }
+            MemoryFill
         }
-        | wp::ElemDrop { elem_index: _ }
-        | wp::TableCopy {
-            dst_table: _,
-            src_table: _,
-        } => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::BulkMemoryOperations,
-        ))?,
+        wp::DataDrop { data_index } => DataDrop(data_index.into()),
 
-        wp::TableFill { table: _ } => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::BulkMemoryOperations,
-        ))?,
+        wp::TableInit { elem_index, table } => TableInit(table.into(), elem_index.into()),
+        wp::ElemDrop { elem_index } => ElemDrop(elem_index.into()),
+        wp::TableCopy { dst_table, src_table } => TableCopy(dst_table.into(), src_table.into()),
+        wp::TableFill { table } => TableFill(table.into()),
 
         wp::TableGet { table } => TableGet(table.into()),
         wp::TableSet { table } => TableSet(table.into()),

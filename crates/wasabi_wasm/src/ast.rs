@@ -341,7 +341,9 @@ pub struct Module {
     pub memories: Vec<Memory>,
 
     pub elements: Vec<Element>,
+    pub datas: Vec<Data>,
 
+    pub data_count: Option<u32>,
     pub start: Option<Idx<Function>>,
 
     pub custom_sections: Vec<RawCustomSection>,
@@ -464,7 +466,6 @@ pub struct Memory {
     pub limits: Limits,
     // Unlike functions and globals, an imported memory can still be initialized with data elements.
     pub import: Option<(String, String)>,
-    pub data: Vec<Data>,
     pub export: Vec<String>,
 }
 
@@ -519,8 +520,14 @@ pub enum ElementMode {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct Data {
-    pub offset: Expr,
-    pub bytes: Vec<u8>,
+    pub init: Vec<u8>,
+    pub mode: DataMode,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum DataMode {
+    Passive,
+    Active {memory: Idx<Memory>, offset: Expr},
 }
 
 /// Metainformation how low-level sections and function bodies map to byte offsets in the binary.
@@ -594,6 +601,7 @@ pub enum SectionId {
     Export,
     Start,
     Element,
+    DataCount,
     Code,
     Data,
     Custom(String),
@@ -763,6 +771,11 @@ pub enum Instr {
     TableSize(Idx<Table>),
     TableGrow(Idx<Table>),
 
+    TableFill(Idx<Table>),
+    TableCopy(Idx<Table>, Idx<Table>),
+    TableInit(Idx<Table>, Idx<Element>),
+    ElemDrop(Idx<Element>),
+
     // TODO: Get rid of all locals by using block params and results only + a pick or copy
     // instruction, that copies the nth value on the stack to the top.
     // Benefit: fully in SSA form, decoalesced locals, liveness information explicit.
@@ -772,9 +785,14 @@ pub enum Instr {
     Load(LoadOp, Memarg),
     Store(StoreOp, Memarg),
 
-    // TODO: remove Idx<Memory>, always 0 in MVP.
     MemorySize(Idx<Memory>),
     MemoryGrow(Idx<Memory>),
+
+    // Note: we dont need the memory idx in these instructions for now as we don't support multi-memory
+    MemoryFill,
+    MemoryCopy,
+    MemoryInit(Idx<Data>),
+    DataDrop(Idx<Data>),
 
     Const(Val),
     Unary(UnaryOp),
@@ -1594,6 +1612,10 @@ impl Instr {
             TableSet(_) => "table.set",
             TableSize(_) => "table.size",
             TableGrow(_) => "table.grow",
+            TableFill(_) => "table.fill",
+            TableCopy(_, _) => "table.copy",
+            TableInit(_, _) => "table.init",
+            ElemDrop(_) => "elem.drop",
 
             Local(LocalOp::Get, _) => "local.get",
             Local(LocalOp::Set, _) => "local.set",
@@ -1603,6 +1625,10 @@ impl Instr {
 
             MemorySize(_) => "memory.size",
             MemoryGrow(_) => "memory.grow",
+            MemoryFill => "memory.fill",
+            MemoryCopy => "memory.copy",
+            MemoryInit(_) => "memory.init",
+            DataDrop(_) => "data.drop",
 
             Const(Val::I32(_)) => "i32.const",
             Const(Val::I64(_)) => "i64.const",
@@ -1631,8 +1657,13 @@ impl Instr {
             Nop => Some(FunctionType::new(&[], &[])),
             Load(ref op, _) => Some(op.to_type()),
             Store(ref op, _) => Some(op.to_type()),
+
             MemorySize(_) => Some(FunctionType::new(&[], &[I32])),
             MemoryGrow(_) => Some(FunctionType::new(&[I32], &[I32])),
+            MemoryFill => Some(FunctionType::new(&[I32, I32, I32], &[])),
+            MemoryCopy | MemoryInit(_) => Some(FunctionType::new(&[I32, I32, I32], &[])),
+            DataDrop(_) => Some(FunctionType::new(&[], &[])),
+
             Const(ref val) => Some(FunctionType::new(&[], &[val.to_type()])),
             Unary(ref op) => Some(op.to_type()),
             Binary(ref op) => Some(op.to_type()),
@@ -1662,7 +1693,11 @@ impl Instr {
             TableGet(_) => None,
             TableSet(_) => None,
             TableSize(_) => Some(FunctionType::new(&[], &[I32])),
-            TableGrow(_) => None
+            TableGrow(_) => None,
+            TableFill(_) => None,
+            TableCopy(_, _) => Some(FunctionType::new(&[I32, I32, I32], &[])),
+            TableInit(_, _) => Some(FunctionType::new(&[I32, I32, I32], &[])),
+            ElemDrop(_) => Some(FunctionType::new(&[], &[]))
         }
     }
 }
@@ -1769,7 +1804,7 @@ impl fmt::Display for Instr {
         match self {
             // instructions without arguments
             Unreachable | Nop | Drop | Select | Return | Else | End | MemorySize(_)
-            | MemoryGrow(_) | Unary(_) | Binary(_) | RefIsNull => Ok(()),
+            | MemoryGrow(_) | Unary(_) | Binary(_) | RefIsNull | MemoryFill | MemoryCopy => Ok(()),
 
             Block(ty) | Loop(ty) | If(ty) => write!(f, " {ty}"),
 
@@ -1813,6 +1848,14 @@ impl fmt::Display for Instr {
             TableSet(table_idx) => write!(f, " {table_idx:?}"),
             TableSize(table_idx) => write!(f, " {table_idx:?}"),
             TableGrow(table_idx) => write!(f, " {table_idx:?}"),
+
+            TableFill(table_idx) => write!(f, " {table_idx:?}"),
+            TableCopy(table_idx_1, table_idx_2) => write!(f, " {table_idx_1:?}, {table_idx_2:?}"),
+            TableInit(table_idx, element_idx) => write!(f, " {table_idx:?}, {element_idx:?}"),
+            ElemDrop(element_idx) => write!(f, " {element_idx:?}"),
+
+            MemoryInit(data_idx) => write!(f, " {data_idx:?}"),
+            DataDrop(data_idx) => write!(f, " {data_idx:?}")
         }
     }
 }
@@ -1852,6 +1895,10 @@ impl Module {
 
     pub fn elements(&self) -> impl Iterator<Item = (Idx<Element>, &Element)> {
         self.elements.iter().enumerate().map(|(i, t)| (i.into(), t))
+    }
+
+    pub fn datas(&self) -> impl Iterator<Item = (Idx<Data>, &Data)> {
+        self.datas.iter().enumerate().map(|(i, m)| (i.into(), m))
     }
 
     // Convenient accessors of functions for the typed, high-level index.
@@ -2297,7 +2344,6 @@ impl Memory {
         Memory {
             limits,
             import: None,
-            data: Vec::new(),
             export: Vec::new(),
         }
     }
@@ -2306,7 +2352,6 @@ impl Memory {
         Memory {
             limits,
             import: Some((import_module, import_name)),
-            data: Vec::new(),
             export: Vec::new(),
         }
     }

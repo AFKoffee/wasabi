@@ -44,9 +44,9 @@ pub fn add_hooks(
     node_js: bool,
 ) -> Option<(String, usize)> {
     // make sure table is exported, needed for Wasabi runtime to resolve table indices to function indices.
-    for table in &mut module.tables {
+    for (i, table) in &mut module.tables.iter_mut().enumerate() {
         if table.export.is_empty() {
-            table.export.push("__wasabi_table".into());
+            table.export.push(format!("__wasabi_table{i}"));
         }
     }
     // FIXME is this a valid workaround for wrong Firefox exported function .name property?
@@ -708,6 +708,37 @@ pub fn add_hooks(
                         instrumented_body.push(instr);
                     }
                 },
+                TableFill(table_idx) => {
+                    let t = module_info.read().tables[table_idx.to_usize()];
+                    let ty = FunctionType::new(&[I32, ValType::Ref(t), I32], &[]);
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::TableFill) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[ValType::Ref(t)]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
+                TableCopy(_, _) => {
+                    let ty = instr.simple_type().unwrap();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::TableCopy) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
+                TableInit(_, _) => {
+                    let ty = instr.simple_type().unwrap();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::TableInit) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
 
                 /* Memory Instructions */
 
@@ -746,7 +777,37 @@ pub fn add_hooks(
                     } else {
                         instrumented_body.push(instr);
                     }
-                }
+                },
+                MemoryFill  => {
+                    let ty = instr.simple_type().unwrap();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::MemoryFill) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                },
+                MemoryCopy => {
+                    let ty = instr.simple_type().unwrap();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::MemoryCopy) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                },
+                MemoryInit(_) => {
+                    let ty = instr.simple_type().unwrap();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::MemoryInit) {
+                        setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                },
 
                 /* rest are "grouped instructions", i.e., where many instructions can be handled in a similar manner */
 
@@ -799,7 +860,7 @@ pub fn add_hooks(
 
                 /* Numeric Instructions */
 
-                Const(val) => {
+                Const(_val) => {
                     type_stack.instr(&instr.simple_type().unwrap());
 
                     instrumented_body.push(instr.clone());
@@ -867,6 +928,12 @@ pub fn add_hooks(
                     type_stack.push_val(ValType::Ref(RefType::FuncRef)); // TODO: Why not use instr.simple_type() here?
                     instrumented_body.push(instr.clone());
                 },
+                ElemDrop(_) => {
+                    instrumented_body.push(instr.clone());
+                },
+                DataDrop(_) => {
+                    instrumented_body.push(instr.clone());
+                }
             }
         }
 

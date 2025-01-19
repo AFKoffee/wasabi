@@ -25,6 +25,7 @@ mod marker {
         pub struct Table;
         pub struct Memory;
         pub struct Element;
+        pub struct  Data;
     }
 }
 
@@ -42,6 +43,7 @@ struct EncodeState {
     table_idx: IntMap<Idx<Table>, Idx<marker::we::Table>>,
     memory_idx: IntMap<Idx<Memory>, Idx<marker::we::Memory>>,
     element_idx: IntMap<Idx<Element>, Idx<marker::we::Element>>,
+    data_idx: IntMap<Idx<Data>, Idx<marker::we::Data>>,
 
     last_encoded_section: Option<SectionId>,
     custom_sections_encoded: usize,
@@ -106,6 +108,13 @@ impl EncodeState {
         "element"
     );
     encode_state_idx_fns!(
+        insert_data_idx, 
+        map_data_idx, 
+        data_idx, 
+        Data, 
+        "data"
+    );
+    encode_state_idx_fns!(
         insert_global_idx,
         map_global_idx,
         global_idx,
@@ -138,6 +147,7 @@ pub fn encode_module(module: &Module) -> Result<Vec<u8>, EncodeError> {
     let function_section = encode_functions(module, &mut state);
     let (table_section, element_section) = encode_tables(module, &mut state)?;
     let (memory_section, data_section) = encode_memories(module, &mut state)?;
+    let data_count_section = module.data_count.map(|count| we::DataCountSection { count });
     let global_section = encode_globals(module, &mut state)?;
 
     // The code section can also contain types we haven't seen so far (e.g., in `call_indirect`),
@@ -203,6 +213,11 @@ pub fn encode_module(module: &Module) -> Result<Vec<u8>, EncodeError> {
         encoder.section(&element_section);
     }
     state.last_encoded_section = Some(SectionId::Element);
+    encode_and_insert_custom(&mut encoder, &mut state, module);
+    if let Some(data_count_section) = data_count_section {
+        encoder.section(&data_count_section);
+    }
+    state.last_encoded_section = Some(SectionId::DataCount);
     encode_and_insert_custom(&mut encoder, &mut state, module);
     if !code_section.is_empty() {
         encoder.section(&code_section);
@@ -343,36 +358,36 @@ fn encode_tables(
         } else {
             state.map_table_idx(hl_table_idx)?
         };
+    }
 
-        for (hl_element_idx, element) in module.elements() {
-            state.insert_element_idx(hl_element_idx);
-            let element_type = match element.typ {
-                RefType::FuncRef => we::ValType::FuncRef,
-                RefType::ExternRef => we::ValType::ExternRef,
-            };
-            let expr = element
-                .init
-                .iter()
-                .map(|instrs| -> Result<ConstExpr, EncodeError> {
-                    Ok(encode_single_instruction_with_end(instrs, state)?)
-                })
-                .map(|expr| expr.map_err(|e| e.into()))
-                .collect::<Result<Vec<ConstExpr>, EncodeError>>()?;
-            let elements = we::Elements::Expressions(&expr);
-            match &element.mode {
-                ElementMode::Passive => element_section.passive(element_type, elements),
-                ElementMode::Active { table, offset } => {
-                    let ll_offset = encode_single_instruction_with_end(&offset, state)?;
-                    element_section.active(
-                        Some(state.map_table_idx(*table)?.to_u32()),
-                        &ll_offset,
-                        element_type,
-                        elements,
-                    )
-                }
-                ElementMode::Declarative => element_section.declared(element_type, elements),
-            };
-        }
+    for (hl_element_idx, element) in module.elements() {
+        state.insert_element_idx(hl_element_idx);
+        let element_type = match element.typ {
+            RefType::FuncRef => we::ValType::FuncRef,
+            RefType::ExternRef => we::ValType::ExternRef,
+        };
+        let expr = element
+            .init
+            .iter()
+            .map(|instrs| -> Result<ConstExpr, EncodeError> {
+                Ok(encode_single_instruction_with_end(instrs, state)?)
+            })
+            .map(|expr| expr.map_err(|e| e.into()))
+            .collect::<Result<Vec<ConstExpr>, EncodeError>>()?;
+        let elements = we::Elements::Expressions(&expr);
+        match &element.mode {
+            ElementMode::Passive => element_section.passive(element_type, elements),
+            ElementMode::Active { table, offset } => {
+                let ll_offset = encode_single_instruction_with_end(&offset, state)?;
+                element_section.active(
+                    Some(state.map_table_idx(*table)?.to_u32()),
+                    &ll_offset,
+                    element_type,
+                    elements,
+                )
+            }
+            ElementMode::Declarative => element_section.declared(element_type, elements),
+        };
     }
 
     Ok((table_section, element_section))
@@ -386,17 +401,26 @@ fn encode_memories(
     let mut data_section = we::DataSection::new();
 
     for (hl_memory_idx, memory) in module.memories() {
-        let ll_memory_idx = if memory.import.is_none() {
+        if memory.import.is_none() {
             memory_section.memory(we::MemoryType::from(memory.limits));
             state.insert_memory_idx(hl_memory_idx)
         } else {
             state.map_memory_idx(hl_memory_idx)?
         };
 
-        for data in &memory.data {
-            let ll_offset = encode_single_instruction_with_end(&data.offset, state)?;
-            let ll_data = data.bytes.iter().copied();
-            data_section.active(ll_memory_idx.to_u32(), &ll_offset, ll_data);
+        for (hl_data_idx, data) in module.datas() {
+            state.insert_data_idx(hl_data_idx);
+            match &data.mode {
+                DataMode::Passive => {
+                    let ll_data = data.init.iter().copied();
+                    data_section.passive(ll_data);
+                }
+                DataMode::Active { memory, offset } => {
+                    let ll_offset = encode_single_instruction_with_end(&offset, state)?;
+                    let ll_data = data.init.iter().copied();
+                    data_section.active(memory.to_u32(), &ll_offset, ll_data);
+                }
+            }
         }
     }
 
@@ -521,10 +545,21 @@ fn encode_instruction(
         Instr::Select => we::Instruction::Select,
         Instr::TypedSelect(ty) => we::Instruction::TypedSelect(ty.into()),
 
-        Instr::TableGet(table_idx) => we::Instruction::TableGet(table_idx.to_u32()),
-        Instr::TableSet(table_idx) => we::Instruction::TableGet(table_idx.to_u32()),
-        Instr::TableSize(table_idx) => we::Instruction::TableSize(table_idx.to_u32()),
-        Instr::TableGrow(table_idx) => we::Instruction::TableGrow(table_idx.to_u32()),
+        Instr::TableGet(table_idx) => we::Instruction::TableGet(state.map_table_idx(table_idx)?.to_u32()),
+        Instr::TableSet(table_idx) => we::Instruction::TableSet(state.map_table_idx(table_idx)?.to_u32()),
+        Instr::TableSize(table_idx) => we::Instruction::TableSize(state.map_table_idx(table_idx)?.to_u32()),
+        Instr::TableGrow(table_idx) => we::Instruction::TableGrow(state.map_table_idx(table_idx)?.to_u32()),
+
+        Instr::TableFill(table_idx) => we::Instruction::TableFill(state.map_table_idx(table_idx)?.to_u32()),
+        Instr::TableCopy(idx_1, idx_2) => we::Instruction::TableCopy { 
+            src_table: state.map_table_idx(idx_1)?.to_u32(), 
+            dst_table: state.map_table_idx(idx_2)?.to_u32() 
+        },
+        Instr::TableInit(table_idx, element_idx) => we::Instruction::TableInit { 
+            table: state.map_table_idx(table_idx)?.to_u32(), 
+            elem_index: state.map_element_idx(element_idx)?.to_u32() 
+        },
+        Instr::ElemDrop(element_idx) => we::Instruction::ElemDrop(state.map_element_idx(element_idx)?.to_u32()),
 
         Instr::Local(LocalOp::Get, local_idx) => we::Instruction::LocalGet(local_idx.to_u32()),
         Instr::Local(LocalOp::Set, local_idx) => we::Instruction::LocalSet(local_idx.to_u32()),
@@ -567,6 +602,14 @@ fn encode_instruction(
         Instr::MemoryGrow(memory_idx) => {
             we::Instruction::MemoryGrow(state.map_memory_idx(memory_idx)?.to_u32())
         }
+        
+        Instr::MemoryFill => we::Instruction::MemoryFill(0),
+        Instr::MemoryCopy => we::Instruction::MemoryCopy { src_mem: 0, dst_mem: 0 },
+        Instr::MemoryInit(data_idx) => we::Instruction::MemoryInit { 
+            mem: 0, 
+            data_index: state.map_data_idx(data_idx)?.to_u32() 
+        },
+        Instr::DataDrop(data_idx) => we::Instruction::DataDrop(state.map_data_idx(data_idx)?.to_u32()),
 
         Instr::Const(Val::I32(value)) => we::Instruction::I32Const(value),
         Instr::Const(Val::I64(value)) => we::Instruction::I64Const(value),
