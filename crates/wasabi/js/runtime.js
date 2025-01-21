@@ -128,6 +128,16 @@ let Wasabi = {
         memory_grow(location, byPages, previousSizePages) {},
         local(location, op, localIndex, value) {},
         global(location, op, globalIndex, value) {},
+        memory_fill(location, index, value, length) {},
+        memory_copy(location, destination, source, length) {},
+        memory_init(location, destination, source, length) {},
+        table_size(location, currentSizeEntries) {},
+        table_copy(location, destination, source, length) {},
+        table_init(location, destination, source, length) {},
+        table_get(location, index, value) {},
+        table_set(location, index, value) {},
+        table_grow(location, n, val, previusElement) {},
+        table_fill(location, index, value, length) {},
     }
 
     const assertInstantiationPrecondition = function() {
@@ -162,6 +172,7 @@ let Wasabi = {
             wireInstanceExports(instance);
         });
 
+        WebAssembly.instantiate = oldInstantiate; // TODO: Why is this here?
         // FIXME Due to the added imports of __wasabi functions, host code that mutates the table
         // might insert the wrong numerical index into the table.
         // We could at least detect (and warn that this changes behavior), or fix it, by wrapping
