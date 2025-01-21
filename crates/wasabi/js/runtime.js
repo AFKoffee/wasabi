@@ -26,7 +26,17 @@ let Wasabi = {
         "memory_size",
         "memory_grow",
         "local",
-        "global"
+        "global",
+        "memory_fill",
+        "memory_copy",
+        "memory_init",
+        "table_size",
+        "table_copy",
+        "table_init",
+        "table_get",
+        "table_set",
+        "table_grow",
+        "table_fill",
     ],
 
     // map a table index to a function index
