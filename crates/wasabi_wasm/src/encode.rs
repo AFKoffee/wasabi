@@ -407,19 +407,19 @@ fn encode_memories(
         } else {
             state.map_memory_idx(hl_memory_idx)?
         };
-
-        for (hl_data_idx, data) in module.datas() {
-            state.insert_data_idx(hl_data_idx);
-            match &data.mode {
-                DataMode::Passive => {
-                    let ll_data = data.init.iter().copied();
-                    data_section.passive(ll_data);
-                }
-                DataMode::Active { memory, offset } => {
-                    let ll_offset = encode_single_instruction_with_end(&offset, state)?;
-                    let ll_data = data.init.iter().copied();
-                    data_section.active(memory.to_u32(), &ll_offset, ll_data);
-                }
+    }
+    
+    for (hl_data_idx, data) in module.datas() {
+        state.insert_data_idx(hl_data_idx);
+        match &data.mode {
+            DataMode::Passive => {
+                let ll_data = data.init.iter().copied();
+                data_section.passive(ll_data);
+            }
+            DataMode::Active { memory, offset } => {
+                let ll_offset = encode_single_instruction_with_end(offset, state)?;
+                let ll_data = data.init.iter().copied();
+                data_section.active(memory.to_u32(), &ll_offset, ll_data);
             }
         }
     }
