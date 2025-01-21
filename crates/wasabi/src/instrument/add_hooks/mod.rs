@@ -1066,6 +1066,11 @@ fn generate_js(module_info: ModuleInfo, hooks: &[String], node_js: bool) -> Stri
 
     if node_js {
         result.push_str("\nmodule.exports = Wasabi;\n");
+    } else {
+        // Hacky: Makes the script return the Wasabi object for access after eval(...)
+        // See: crates/wasabi_js/example/index.html
+        // Revise!!
+        result.push_str("\nWasabi\n");
     }
 
     result
