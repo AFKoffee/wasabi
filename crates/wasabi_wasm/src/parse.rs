@@ -829,17 +829,14 @@ fn parse_instr(
         wp::I64Extend16S => Unary(UnaryOp::I64Extend16S),
         wp::I64Extend32S => Unary(UnaryOp::I64Extend32S),
 
-        wp::I32TruncSatF32S
-        | wp::I32TruncSatF32U
-        | wp::I32TruncSatF64S
-        | wp::I32TruncSatF64U
-        | wp::I64TruncSatF32S
-        | wp::I64TruncSatF32U
-        | wp::I64TruncSatF64S
-        | wp::I64TruncSatF64U => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::NontrappingFloatToInt,
-        ))?,
+        wp::I32TruncSatF32S => Unary(UnaryOp::I32TruncSatF32S),
+        wp::I32TruncSatF32U => Unary(UnaryOp::I32TruncSatF32U),
+        wp::I32TruncSatF64S => Unary(UnaryOp::I32TruncSatF64S),
+        wp::I32TruncSatF64U => Unary(UnaryOp::I32TruncSatF64U),
+        wp::I64TruncSatF32S => Unary(UnaryOp::I64TruncSatF32S),
+        wp::I64TruncSatF32U => Unary(UnaryOp::I64TruncSatF32U),
+        wp::I64TruncSatF64S => Unary(UnaryOp::I64TruncSatF64S),
+        wp::I64TruncSatF64U => Unary(UnaryOp::I64TruncSatF64U),
 
         wp::MemoryInit { data_index, mem } => {
             if mem != 0 {
