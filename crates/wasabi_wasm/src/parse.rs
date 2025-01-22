@@ -186,7 +186,7 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                     for op in global.init_expr.get_operators_reader() {
                         // The `offset` will be slightly off, because it points to the beginning of the
                         // whole global entry, not the initialization expression.
-                        init.push(parse_instr(op?, offset, &types, &metadata)?)
+                        init.push(parse_instr(op?, offset, &types)?)
                     }
 
                     module.globals.push(Global::new(type_, init));
@@ -282,7 +282,7 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                                         const_expr.get_operators_reader().into_iter_with_offsets()
                                     {
                                         if let Ok((op, offset)) = op_offset {
-                                            let value = match parse_instr(op, offset, &types, &metadata) {
+                                            let value = match parse_instr(op, offset, &types) {
                                                 Ok(it) => it,
                                                 Err(_) => return,
                                             };
@@ -306,7 +306,7 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                                 offset_expr.get_operators_reader().into_iter_with_offsets()
                             {
                                 let (op, offset) = op_offset?;
-                                offset_instrs.push(parse_instr(op, offset, &types, &metadata)?)
+                                offset_instrs.push(parse_instr(op, offset, &types)?)
                             }
 
                             module.elements.push(Element {
@@ -349,7 +349,7 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                                 offset_expr.get_operators_reader().into_iter_with_offsets()
                             {
                                 let (op, offset) = op_offset?;
-                                offset_instrs.push(parse_instr(op, offset, &types, &metadata)?)
+                                offset_instrs.push(parse_instr(op, offset, &types)?)
                             }
 
                             module.datas.push(Data {
@@ -395,7 +395,7 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                             (
                                 func_idx,
                                 body.range().start,
-                                parse_body(body, &types, &metadata),
+                                parse_body(body, &types),
                             )
                         })
                         .collect::<Vec<_>>();
@@ -516,8 +516,7 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
 
 fn parse_body(
     body: wp::FunctionBody,
-    types: &Types,
-    metadata: &RwLock<ModuleMetadata>,
+    types: &Types
 ) -> Result<Code, ParseError> {
     let mut locals_reader = body.get_locals_reader()?;
     let mut offset = locals_reader.original_position();
@@ -566,7 +565,7 @@ fn parse_body(
 
     for op_offset in body.get_operators_reader()?.into_iter_with_offsets() {
         let (op, offset) = op_offset?;
-        instrs.push(parse_instr(op, offset, types, metadata)?);
+        instrs.push(parse_instr(op, offset, types)?);
     }
 
     Ok(Code {
@@ -578,8 +577,7 @@ fn parse_body(
 fn parse_instr(
     op: wp::Operator,
     offset: usize,
-    types: &Types,
-    metadata: &RwLock<ModuleMetadata>,
+    types: &Types
 ) -> Result<Instr, ParseError> {
     use crate::Instr::*;
     use wp::Operator as wp;
@@ -587,9 +585,9 @@ fn parse_instr(
         wp::Unreachable => Unreachable,
         wp::Nop => Nop,
 
-        wp::Block { blockty } => Block(parse_block_ty(blockty, offset + 1, types, metadata)?),
-        wp::Loop { blockty } => Loop(parse_block_ty(blockty, offset + 1, types, metadata)?),
-        wp::If { blockty } => If(parse_block_ty(blockty, offset + 1, types, metadata)?),
+        wp::Block { blockty } => Block(parse_block_ty(blockty, offset + 1, types)?),
+        wp::Loop { blockty } => Loop(parse_block_ty(blockty, offset + 1, types)?),
+        wp::If { blockty } => If(parse_block_ty(blockty, offset + 1, types)?),
         wp::Else => Else,
         wp::End => End,
 
@@ -1273,20 +1271,13 @@ fn parse_elem_ty(ty: wp::ValType, offset: usize) -> Result<RefType, ParseError> 
 fn parse_block_ty(
     ty: wp::BlockType,
     offset: usize,
-    types: &Types,
-    metadata: &RwLock<ModuleMetadata>,
+    types: &Types
 ) -> Result<FunctionType, ParseError> {
     use wp::BlockType::*;
     match ty {
         Empty => Ok(FunctionType::empty()),
         Type(ty) => Ok(FunctionType::new(&[], &[parse_val_ty(ty, offset)?])),
-        FuncType(type_idx) => {
-            metadata
-                .write()
-                .unwrap()
-                .add_used_extension(WasmExtension::MultiValue);
-            types.get(type_idx, offset)
-        }
+        FuncType(type_idx) => types.get(type_idx, offset),
     }
 }
 
