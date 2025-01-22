@@ -1070,7 +1070,7 @@ fn generate_js(module_info: ModuleInfo, hooks: &[String], node_js: bool) -> Stri
         // Hacky: Makes the script return the Wasabi object for access after eval(...)
         // See: crates/wasabi_js/example/index.html
         // Revise!!
-        result.push_str("\nWasabi\n");
+        // result.push_str("\nWasabi\n");
     }
 
     result

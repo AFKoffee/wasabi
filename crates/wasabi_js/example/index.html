@@ -17,9 +17,9 @@
         console.log(`instrumented wasm:`, instrumented_arr)
         const res = eval(js);
         // Hacky way of integrating high-level analysis ... revise!
-        const Wasabi = res;
-        let analysis = await fetch('./log-all.js')
-          .then(v => v.text().then(txt => eval(txt)));
+        // const Wasabi = res;
+        //let analysis = await fetch('./log-all.js')
+        //  .then(v => v.text().then(txt => eval(txt)));
         const { instance } = await WebAssembly.instantiate(instrumented_arr, res);
         console.log(`1 + 2 = `, instance.exports.add(1, 2))
       }
