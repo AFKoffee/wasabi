@@ -158,12 +158,14 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
     use std::process::Command;
 
     let path = path.as_ref();
-    let validate_output = Command::new("wasm-validate")
-        .arg("--ignore-custom-section-errors")
+    let validate_output = Command::new("wasm-tools")
+        .arg("validate")
+        .arg("--features")
         // Disable all extensions that we don't support yet.
+        .arg("wasm2,-simd")
         // .arg("--disable-saturating-float-to-int")
         // .arg("--disable-sign-extension")
-        .arg("--disable-simd")
+        // .arg("--disable-simd")
         // .arg("--disable-multi-value")
         // .arg("--disable-bulk-memory")
         // .arg("--disable-reference-types")
@@ -190,7 +192,7 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
                 // It comes from the wasm-validate tool. Specifically this line in the source code:
                 //      https://github.com/WebAssembly/wabt/blob/ea193b40d6d4a1a697d68ae855b2b3b3e263b377/src/binary-reader-ir.cc#L808
                 // TODO: Further investigate this ... most likely, the instrumentation has to be refactored to create less locals somehow
-                if String::from_utf8_lossy(&validate_output.stderr).contains("function local count exceeds maximum value") {
+                if String::from_utf8_lossy(&validate_output.stderr).contains("too many locals: locals exceed maximum") {
                     assert!(validate_output.stdout.is_empty());
 
                     // Warnings don't make validation fail but _are_ printed on stderr.
