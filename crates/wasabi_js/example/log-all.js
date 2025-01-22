@@ -96,4 +96,96 @@ Wasabi.analysis = {
     global(location, op, globalIndex, value) {
         console.log(location, op, "global #", globalIndex, "value =", value);
     },
+
+    table_size(location, size) {
+        console.log(location, "table_size", ", size (in pages) = ", size);
+    },
+
+    table_copy(location, size, source, destination) {
+        console.log(
+            location, 
+            "table_copy", 
+            ", size (in pages) = ", size, 
+            ", from = ", source, 
+            ", to = ", destination
+        );
+    },
+
+    table_init(location, size, offset, destination) {
+        console.log(
+            location, 
+            "table_init", 
+            ", size (in pages) = ", size, 
+            ", offset = ", offset, 
+            ", destination = ", destination
+        );
+    },
+
+    memory_fill(location, size, value, destination) {
+        console.log(
+            location, 
+            "memory_fill",
+            ", size (in pages) = ", size,
+            ", value = ", value,
+            ", destination = ", destination
+        );
+    },
+
+    memory_copy(location, size, source, destination) {
+        console.log(
+            location,
+            "memory_copy",
+            ", size (in pages = ", size,
+            ", from = ", source,
+            ", to = ", destination
+        );
+    },
+
+    memory_init(location, size, offset, destination) {
+        console.log(
+            location, 
+            "memory_init", 
+            ", size (in pages) = ", size, 
+            ", offset = ", offset, 
+            ", destination = ", destination
+        );
+    },
+
+    table_get(location, index, value) {
+        console.log(
+            location, 
+            "table_get",
+            ", table index = ", index,
+            ", value = ", value 
+        );
+    },
+
+    table_set(location, index, value) {
+        console.log(
+            location,
+            "table_set",
+            ", table index = ", index,
+            ", value = ", value,
+        );
+    },
+
+    table_grow(location, init, n, prev) {
+        console.log(
+            location, 
+            "table_grow",
+            ", initialization = ", init,
+            ", NEWLY allocated = ", n,
+            ", previous size = ", prev,  
+        );
+    },
+
+    table_fill(location, size, value, destination) {
+        console.log(
+            location, 
+            "table_fill",
+            ", size (in pages) = ", size,
+            ", value = ", value,
+            ", destination = ", destination
+        );
+    },
 };
