@@ -3,10 +3,13 @@
         "build": "wasm-pack build --debug -t web",
         "demo": "npm run build && npx copyfiles ./pkg/* ./example/ && npx http-server ./example -p 8888",
         "test": "wasm-pack build --debug -t nodejs && vitest",
-        "instrument": "wasm-pack build --debug -t nodejs && node src/js/instrument.js"
+        "instrument": "wasm-pack build --debug -t nodejs && node src/js/instrument.js",
+        "manual": "npm run instrument",
+        "postmanual": "npx copyfiles -f ./out/* ./example_manual/ && npx renamer --force --replace ./instrumented.wasabi.js  ./example_manual/*.wasabi.js && npx renamer --force --replace instrumented.wasm ./example_manual/*.wasm && npx http-server ./example_manual -p 8888"
     },
     "devDependencies": {
         "copyfiles": "^2.3.0",
+        "renamer": "^5.0.2",
         "http-server": "^14.1.1",
         "vitest": "^0.34.6"
     },
