@@ -141,7 +141,7 @@ impl fmt::Display for WasmValidateError {
                 stderr,
             } => {
                 writeln!(f, "invalid Wasm file {input_file}")?;
-                writeln!(f, "\twasm-validate status code: {status_code}")?;
+                writeln!(f, "\twasm-tools validate status code: {status_code}")?;
                 writeln!(f, "\tstdout: {}", stdout.trim())?;
                 write!(f, "\tstderr: {}", stderr.trim())
             }
@@ -153,17 +153,19 @@ impl fmt::Display for WasmValidateError {
     }
 }
 
-/// Call WABT's wasm-validate tool on a file (WABT needs to be on $PATH).
+/// Call WABT's wasm-tools validate tool on a file (WABT needs to be on $PATH).
 pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
     use std::process::Command;
 
     let path = path.as_ref();
-    let validate_output = Command::new("wasm-validate")
-        .arg("--ignore-custom-section-errors")
+    let validate_output = Command::new("wasm-tools")
+        .arg("validate")
+        .arg("--features")
         // Disable all extensions that we don't support yet.
+        .arg("wasm2,-simd")
         // .arg("--disable-saturating-float-to-int")
         // .arg("--disable-sign-extension")
-        .arg("--disable-simd")
+        // .arg("--disable-simd")
         // .arg("--disable-multi-value")
         // .arg("--disable-bulk-memory")
         // .arg("--disable-reference-types")
@@ -180,17 +182,17 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
                 let stderr = stderr.trim();
                 if !stderr.is_empty() {
                     let file_info = WasmFileInfo::new(path);
-                    eprintln!("wasm-validate warning on {file_info}\n\t{stderr}");
+                    eprintln!("wasm-tools validate warning on {file_info}\n\t{stderr}");
                 }
 
                 Ok(())
             },
             Some(status_code) => {
                 // Explicitly ignore this error as this is present throughout the whole test suite
-                // It comes from the wasm-validate tool. Specifically this line in the source code:
+                // It comes from the wasm-tools validate tool. Specifically this line in the source code:
                 //      https://github.com/WebAssembly/wabt/blob/ea193b40d6d4a1a697d68ae855b2b3b3e263b377/src/binary-reader-ir.cc#L808
                 // TODO: Further investigate this ... most likely, the instrumentation has to be refactored to create less locals somehow
-                if String::from_utf8_lossy(&validate_output.stderr).contains("function local count exceeds maximum value") {
+                if String::from_utf8_lossy(&validate_output.stderr).contains("too many locals: locals exceed maximum") {
                     assert!(validate_output.stdout.is_empty());
 
                     // Warnings don't make validation fail but _are_ printed on stderr.
@@ -198,7 +200,7 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
                     let stderr = stderr.trim();
                     if !stderr.is_empty() {
                         let file_info = WasmFileInfo::new(path);
-                        eprintln!("wasm-validate warning on {file_info}\n\t{stderr}");
+                        eprintln!("wasm-tools validate warning on {file_info}\n\t{stderr}");
                     }
 
                     Ok(())
@@ -213,7 +215,7 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
             },
             None => Err(WasmValidateError::CouldNotValidate {
                 input_file: WasmFileInfo::new(path),
-                error: "wasm-validate terminated without a status code, on Linux this means it was terminated by a signal (possibly the OOM killer)".to_string()
+                error: "wasm-tools validate terminated without a status code, on Linux this means it was terminated by a signal (possibly the OOM killer)".to_string()
             }),
         },
         Err(err) => Err(WasmValidateError::CouldNotValidate {
