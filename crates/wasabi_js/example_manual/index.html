@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
+    <script src="./instrumented.wasabi.js"></script>
+    <script type="module">
+        WebAssembly.instantiateStreaming(fetch("instrumented.wasm"), {env: {print: console.log}}).then(
+            (results) => {
+                // Do something with the results!
+                results.instance.exports.test()
+            },
+        );    
+    </script>
+    <script src="./analysis.js"></script>
+    <h1>Open Console</h1>
+  </body>
+</html>

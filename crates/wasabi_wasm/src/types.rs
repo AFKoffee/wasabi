@@ -668,6 +668,32 @@ impl<'module> TypeChecker<'module> {
         Ok(())
     }
 
+    fn peek_vals_expected(&mut self, expected: &[ValType]) -> Result<(), TypeError> {
+        let frame = self.top_block()?;
+        for (i, &expected) in expected.iter().rev().enumerate() {
+            let len = frame.value_stack.len();
+            if len == 0 {
+                if frame.unreachable {
+                    continue;
+                } else {
+                    return Err(TypeError::from(
+                        "expected a value, but value stack was empty",
+                    ));
+                }
+            } else if let Some(actual) = frame.value_stack.get(len - i - 1) {
+                expected.join(*actual).ok_or_else(|| {
+                    TypeError::from(format!("expected type {expected}, but got {actual}"))
+                })?;
+            } else if !frame.unreachable {
+                return Err(TypeError::from(
+                    "expected a value, but value stack was empty",
+                ));
+            }
+        }
+
+        Ok(())
+    }
+
     fn push_val(&mut self, type_: impl Into<InferredValType>) -> Result<(), TypeError> {
         self.top_block_mut()?.value_stack.push(type_.into());
         Ok(())
@@ -830,6 +856,34 @@ fn check_instr(
             state.push_vals(function_ty.results())?;
             to_inferred_type(function_ty)
         }
+        TableGet(idx) => {
+            let ref_ty = module.table(*idx).ref_type;
+            let function_ty = FunctionType::new(&[ValType::I32], &[ValType::Ref(ref_ty)]);
+            state.pop_vals_expected(function_ty.inputs())?;
+            state.push_vals(function_ty.results())?;
+            to_inferred_type(function_ty)
+        }
+        TableSet(idx) => {
+            let ref_ty = module.table(*idx).ref_type;
+            let function_ty = FunctionType::new(&[ValType::I32, ValType::Ref(ref_ty)], &[]);
+            state.pop_vals_expected(function_ty.inputs())?;
+            state.push_vals(function_ty.results())?;
+            to_inferred_type(function_ty)
+        }
+        TableGrow(idx) => {
+            let ref_ty = module.table(*idx).ref_type;
+            let function_ty = FunctionType::new(&[ValType::Ref(ref_ty), ValType::I32], &[ValType::I32]);
+            state.pop_vals_expected(function_ty.inputs())?;
+            state.push_vals(function_ty.results())?;
+            to_inferred_type(function_ty)
+        },
+        TableFill(idx) => {
+            let ref_ty = module.table(*idx).ref_type;
+            let function_ty = FunctionType::new(&[ValType::I32, ValType::Ref(ref_ty), ValType::I32], &[]);
+            state.pop_vals_expected(function_ty.inputs())?;
+            state.push_vals(function_ty.results())?;
+            to_inferred_type(function_ty)
+        }
 
         // Value-polymorphic instructions:
         Drop => {
@@ -840,12 +894,23 @@ fn check_instr(
                 (Err(UnconstrainedTypeError), false) => unreachable!("unconstrained value type should never appear in reachable code"),
             }
         }
+        RefIsNull => {
+            let ty = state.pop_val()?;
+            state.push_val(InferredValType::from(ValType::I32))?;
+            match (ValType::try_from(ty), was_unreachable) {
+                (_, true) => InferredInstructionType::Unreachable,
+                (Ok(ValType::Ref(refty)), false) => InferredInstructionType::Reachable(FunctionType::new(&[ValType::Ref(refty)], &[ValType::I32])),
+                (Ok(ty), false) => return Err(TypeError::from(format!("ref.isnull is valid only for ref types, but not {ty}"))),
+                (Err(UnconstrainedTypeError), false) => unreachable!("unconstrained value type should never appear in reachable code"),
+            }
+        }
         Select => {
             state.pop_val_expected(ValType::I32)?;
             let ty1 = state.pop_val()?;
             let ty2 = state.pop_val()?;
             let ty = ty1.join(ty2)
                 .ok_or_else(|| TypeError::from(format!("incompatible types {ty1} and {ty2} for select arguments")))?;
+            // TODO: Check for reftypes. Select instruction is invalid for them.
             state.push_val(ty)?;
             match (ValType::try_from(ty), was_unreachable) {
                 (_, true) => InferredInstructionType::Unreachable,
@@ -926,8 +991,7 @@ fn check_instr(
             // This ensures all branch targets have the same type.
             for label in table.iter() {
                 let label_inputs = state.get_block(*label)?.label_inputs.clone();
-                state.pop_vals_expected(&label_inputs)?;
-                state.push_vals(&label_inputs)?;
+                state.peek_vals_expected(&label_inputs)?;
             }
 
             // Check the default label types.
