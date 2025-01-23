@@ -1207,25 +1207,23 @@ fn parse_memarg(memarg: wp::MemArg, parser_offset: usize) -> Result<Memarg, Pars
     })
 }
 
-fn parse_memory_ty(ty: wp::MemoryType, offset: usize) -> Result<Limits, ParseError> {
+fn parse_memory_ty(ty: wp::MemoryType, offset: usize) -> Result<MemoryType, ParseError> {
     if ty.memory64 {
         Err(ParseIssue::unsupported(offset, WasmExtension::Memory64))?
     }
-    if ty.shared {
-        Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ThreadsAtomics,
-        ))?
-    }
-    Ok(Limits {
-        initial_size: ty
-            .initial
-            .try_into()
-            .expect("guaranteed u32 by wasmparser if !memory64"),
-        max_size: ty.maximum.map(|u| {
-            u.try_into()
-                .expect("guaranteed u32 by wasmparser if !memory64")
-        }),
+
+    Ok(MemoryType {
+        limits: Limits {
+            initial_size: ty
+                .initial
+                .try_into()
+                .expect("guaranteed u32 by wasmparser if !memory64"),
+            max_size: ty.maximum.map(|u| {
+                u.try_into()
+                    .expect("guaranteed u32 by wasmparser if !memory64")
+            }),
+        },
+        shared: ty.shared
     })
 }
 

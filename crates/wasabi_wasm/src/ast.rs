@@ -459,9 +459,15 @@ pub struct Table {
     pub export: Vec<String>,
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub struct MemoryType {
+    pub limits: Limits,
+    pub shared: bool,
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct Memory {
-    pub limits: Limits,
+    pub memtype: MemoryType,
     // Unlike functions and globals, an imported memory can still be initialized with data elements.
     pub import: Option<(String, String)>,
     pub export: Vec<String>,
@@ -2359,17 +2365,17 @@ impl Table {
 }
 
 impl Memory {
-    pub fn new(limits: Limits) -> Memory {
+    pub fn new(memtype: MemoryType) -> Memory {
         Memory {
-            limits,
+            memtype,
             import: None,
             export: Vec::new(),
         }
     }
 
-    pub fn new_imported(limits: Limits, import_module: String, import_name: String) -> Memory {
+    pub fn new_imported(memtype: MemoryType, import_module: String, import_name: String) -> Memory {
         Memory {
-            limits,
+            memtype,
             import: Some((import_module, import_name)),
             export: Vec::new(),
         }

@@ -262,7 +262,7 @@ fn encode_imports(module: &Module, state: &mut EncodeState) -> we::ImportSection
         get_tabletype_from_table(t)
     });
     add_imports!(memories, insert_memory_idx, Memory, |m: &Memory| {
-        we::MemoryType::from(m.limits)
+        we::MemoryType::from(m.memtype)
     });
     add_imports!(globals, insert_global_idx, Global, |g: &Global| {
         we::GlobalType::from(g.type_)
@@ -398,7 +398,7 @@ fn encode_memories(
 
     for (hl_memory_idx, memory) in module.memories() {
         if memory.import.is_none() {
-            memory_section.memory(we::MemoryType::from(memory.limits));
+            memory_section.memory(we::MemoryType::from(memory.memtype));
             state.insert_memory_idx(hl_memory_idx)
         } else {
             state.map_memory_idx(hl_memory_idx)?
@@ -863,13 +863,13 @@ impl From<Limits> for we::TableType {
     }
 }
 
-impl From<Limits> for we::MemoryType {
-    fn from(limits: Limits) -> Self {
+impl From<MemoryType> for we::MemoryType {
+    fn from(memtype: MemoryType) -> Self {
         Self {
-            minimum: limits.initial_size.into(),
-            maximum: limits.max_size.map(|u32| u32.into()),
+            minimum: memtype.limits.initial_size.into(),
+            maximum: memtype.limits.max_size.map(|u32| u32.into()),
             memory64: false,
-            shared: false,
+            shared: memtype.shared,
         }
     }
 }
