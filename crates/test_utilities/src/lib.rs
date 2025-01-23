@@ -207,8 +207,8 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
                         input_file: WasmFileInfo::new(path),
                         status_code,
                         stdout: String::from_utf8_lossy(&validate_output.stdout).to_string(),
-                        stderr: String::from_utf8_lossy(&validate_output.stderr).to_string()  
-                    }) 
+                        stderr: String::from_utf8_lossy(&validate_output.stderr).to_string()
+                    })
                 }
             },
             None => Err(WasmValidateError::CouldNotValidate {

@@ -100,14 +100,9 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                             let (limits, ref_type) = parse_table_ty(ty, import_offset)?;
                             module.tables.push(
                                 // Same issue regarding `import_offset`.
-                                Table::new_imported(
-                                    limits,
-                                    ref_type,
-                                    import_module,
-                                    import_name,
-                                ),
+                                Table::new_imported(limits, ref_type, import_module, import_name),
                             )
-                        },
+                        }
                         wp::TypeRef::Memory(ty) => {
                             // Same issue regarding `import_offset`.
                             module.memories.push(Memory::new_imported(
@@ -312,10 +307,10 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                             module.elements.push(Element {
                                 typ: refty,
                                 init: items,
-                                mode: ElementMode::Active { 
-                                    table: table_index.into(), 
-                                    offset: offset_instrs 
-                                }
+                                mode: ElementMode::Active {
+                                    table: table_index.into(),
+                                    offset: offset_instrs,
+                                },
                             })
                         }
                         wp::ElementKind::Passive => module.elements.push(Element {
@@ -354,15 +349,18 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
 
                             module.datas.push(Data {
                                 init: data.data.to_vec(),
-                                mode: DataMode::Active { memory: memory_index.into(), offset: offset_instrs }
+                                mode: DataMode::Active {
+                                    memory: memory_index.into(),
+                                    offset: offset_instrs,
+                                },
                             })
                         }
                         wp::DataKind::Passive => {
                             module.datas.push(Data {
                                 init: data.data.to_vec(),
-                                mode: DataMode::Passive
+                                mode: DataMode::Passive,
                             });
-                        },
+                        }
                     }
                 }
             }
@@ -392,11 +390,7 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
                     let function_bodies = function_bodies
                         .par_drain(..)
                         .map(|(func_idx, body)| {
-                            (
-                                func_idx,
-                                body.range().start,
-                                parse_body(body, &types),
-                            )
+                            (func_idx, body.range().start, parse_body(body, &types))
                         })
                         .collect::<Vec<_>>();
                     // Attach the converted function bodies to the function definitions (not parallel).
@@ -514,10 +508,7 @@ pub fn parse_module(bytes: &[u8]) -> Result<(Module, Offsets, ParseWarnings), Pa
     Ok((module, offsets, warnings))
 }
 
-fn parse_body(
-    body: wp::FunctionBody,
-    types: &Types
-) -> Result<Code, ParseError> {
+fn parse_body(body: wp::FunctionBody, types: &Types) -> Result<Code, ParseError> {
     let mut locals_reader = body.get_locals_reader()?;
     let mut offset = locals_reader.original_position();
     // Pre-allocate: There are at least as many locals as there are _unique_ local types.
@@ -574,11 +565,7 @@ fn parse_body(
     })
 }
 
-fn parse_instr(
-    op: wp::Operator,
-    offset: usize,
-    types: &Types
-) -> Result<Instr, ParseError> {
+fn parse_instr(op: wp::Operator, offset: usize, types: &Types) -> Result<Instr, ParseError> {
     use crate::Instr::*;
     use wp::Operator as wp;
     Ok(match op {
@@ -692,7 +679,7 @@ fn parse_instr(
         wp::F32Const { value } => Const(Val::F32(OrderedFloat(f32::from_bits(value.bits())))),
         wp::F64Const { value } => Const(Val::F64(OrderedFloat(f64::from_bits(value.bits())))),
 
-        wp::RefNull { ty} => RefNull(parse_elem_ty(ty, offset)?),
+        wp::RefNull { ty } => RefNull(parse_elem_ty(ty, offset)?),
         wp::RefIsNull => RefIsNull,
         wp::RefFunc { function_index } => RefFunc(function_index.into()),
 
@@ -858,12 +845,15 @@ fn parse_instr(
 
         wp::TableInit { elem_index, table } => TableInit(table.into(), elem_index.into()),
         wp::ElemDrop { elem_index } => ElemDrop(elem_index.into()),
-        wp::TableCopy { dst_table, src_table } => TableCopy(dst_table.into(), src_table.into()),
+        wp::TableCopy {
+            dst_table,
+            src_table,
+        } => TableCopy(dst_table.into(), src_table.into()),
         wp::TableFill { table } => TableFill(table.into()),
 
         wp::TableGet { table } => TableGet(table.into()),
         wp::TableSet { table } => TableSet(table.into()),
-        wp::TableGrow { table} => TableGrow(table.into()),
+        wp::TableGrow { table } => TableGrow(table.into()),
         wp::TableSize { table } => TableSize(table.into()),
 
         wp::MemoryAtomicNotify { memarg: _ }
@@ -1271,7 +1261,7 @@ fn parse_elem_ty(ty: wp::ValType, offset: usize) -> Result<RefType, ParseError> 
 fn parse_block_ty(
     ty: wp::BlockType,
     offset: usize,
-    types: &Types
+    types: &Types,
 ) -> Result<FunctionType, ParseError> {
     use wp::BlockType::*;
     match ty {

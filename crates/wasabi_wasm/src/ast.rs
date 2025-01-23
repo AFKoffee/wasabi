@@ -61,7 +61,6 @@ impl Val {
             ValType::F64 => Val::F64(str.parse().map_err(|_| ())?),
             // reference type can not be parsed into simple value
             ValType::Ref(_) => return Err(()),
-            
         })
     }
 }
@@ -86,14 +85,14 @@ pub enum ValType {
     F32,
     F64,
     // Introduce Reference type as a new kind of value type
-    Ref(RefType)
+    Ref(RefType),
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum RefType {
     FuncRef,
-    ExternRef
+    ExternRef,
 }
 
 #[test]
@@ -110,7 +109,6 @@ impl ValType {
             ValType::F32 => Val::F32(OrderedFloat(0.0)),
             ValType::F64 => Val::F64(OrderedFloat(0.0)),
             ValType::Ref(_) => panic!("Reference Types do not have a zero!"),
-            
         }
     }
 
@@ -508,13 +506,13 @@ pub struct ParamRef<'a> {
 pub struct Element {
     pub typ: RefType,
     pub init: Vec<Expr>,
-    pub mode: ElementMode
+    pub mode: ElementMode,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ElementMode {
     Passive,
-    Active {table: Idx<Table>, offset: Expr},
+    Active { table: Idx<Table>, offset: Expr },
     Declarative,
 }
 
@@ -527,7 +525,7 @@ pub struct Data {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum DataMode {
     Passive,
-    Active {memory: Idx<Memory>, offset: Expr},
+    Active { memory: Idx<Memory>, offset: Expr },
 }
 
 /// Metainformation how low-level sections and function bodies map to byte offsets in the binary.
@@ -1718,7 +1716,7 @@ impl Instr {
             TableFill(_) => None,
             TableCopy(_, _) => Some(FunctionType::new(&[I32, I32, I32], &[])),
             TableInit(_, _) => Some(FunctionType::new(&[I32, I32, I32], &[])),
-            ElemDrop(_) => Some(FunctionType::new(&[], &[]))
+            ElemDrop(_) => Some(FunctionType::new(&[], &[])),
         }
     }
 }
@@ -1876,7 +1874,7 @@ impl fmt::Display for Instr {
             ElemDrop(element_idx) => write!(f, " {element_idx:?}"),
 
             MemoryInit(data_idx) => write!(f, " {data_idx:?}"),
-            DataDrop(data_idx) => write!(f, " {data_idx:?}")
+            DataDrop(data_idx) => write!(f, " {data_idx:?}"),
         }
     }
 }
@@ -2340,10 +2338,10 @@ impl Table {
     }
 
     pub fn new_imported(
-        limits: Limits, 
+        limits: Limits,
         ref_type: RefType,
-        import_module: String, 
-        import_name: String
+        import_module: String,
+        import_name: String,
     ) -> Table {
         Table {
             limits,

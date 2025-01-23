@@ -25,7 +25,7 @@ mod marker {
         pub struct Table;
         pub struct Memory;
         pub struct Element;
-        pub struct  Data;
+        pub struct Data;
     }
 }
 
@@ -107,13 +107,7 @@ impl EncodeState {
         Element,
         "element"
     );
-    encode_state_idx_fns!(
-        insert_data_idx, 
-        map_data_idx, 
-        data_idx, 
-        Data, 
-        "data"
-    );
+    encode_state_idx_fns!(insert_data_idx, map_data_idx, data_idx, Data, "data");
     encode_state_idx_fns!(
         insert_global_idx,
         map_global_idx,
@@ -147,7 +141,9 @@ pub fn encode_module(module: &Module) -> Result<Vec<u8>, EncodeError> {
     let function_section = encode_functions(module, &mut state);
     let (table_section, element_section) = encode_tables(module, &mut state)?;
     let (memory_section, data_section) = encode_memories(module, &mut state)?;
-    let data_count_section = module.data_count.map(|count| we::DataCountSection { count });
+    let data_count_section = module
+        .data_count
+        .map(|count| we::DataCountSection { count });
     let global_section = encode_globals(module, &mut state)?;
 
     // The code section can also contain types we haven't seen so far (e.g., in `call_indirect`),
@@ -408,7 +404,7 @@ fn encode_memories(
             state.map_memory_idx(hl_memory_idx)?
         };
     }
-    
+
     for (hl_data_idx, data) in module.datas() {
         state.insert_data_idx(hl_data_idx);
         match &data.mode {
@@ -545,21 +541,33 @@ fn encode_instruction(
         Instr::Select => we::Instruction::Select,
         Instr::TypedSelect(ty) => we::Instruction::TypedSelect(ty.into()),
 
-        Instr::TableGet(table_idx) => we::Instruction::TableGet(state.map_table_idx(table_idx)?.to_u32()),
-        Instr::TableSet(table_idx) => we::Instruction::TableSet(state.map_table_idx(table_idx)?.to_u32()),
-        Instr::TableSize(table_idx) => we::Instruction::TableSize(state.map_table_idx(table_idx)?.to_u32()),
-        Instr::TableGrow(table_idx) => we::Instruction::TableGrow(state.map_table_idx(table_idx)?.to_u32()),
+        Instr::TableGet(table_idx) => {
+            we::Instruction::TableGet(state.map_table_idx(table_idx)?.to_u32())
+        }
+        Instr::TableSet(table_idx) => {
+            we::Instruction::TableSet(state.map_table_idx(table_idx)?.to_u32())
+        }
+        Instr::TableSize(table_idx) => {
+            we::Instruction::TableSize(state.map_table_idx(table_idx)?.to_u32())
+        }
+        Instr::TableGrow(table_idx) => {
+            we::Instruction::TableGrow(state.map_table_idx(table_idx)?.to_u32())
+        }
 
-        Instr::TableFill(table_idx) => we::Instruction::TableFill(state.map_table_idx(table_idx)?.to_u32()),
-        Instr::TableCopy(idx_1, idx_2) => we::Instruction::TableCopy { 
-            src_table: state.map_table_idx(idx_1)?.to_u32(), 
-            dst_table: state.map_table_idx(idx_2)?.to_u32() 
+        Instr::TableFill(table_idx) => {
+            we::Instruction::TableFill(state.map_table_idx(table_idx)?.to_u32())
+        }
+        Instr::TableCopy(idx_1, idx_2) => we::Instruction::TableCopy {
+            src_table: state.map_table_idx(idx_1)?.to_u32(),
+            dst_table: state.map_table_idx(idx_2)?.to_u32(),
         },
-        Instr::TableInit(table_idx, element_idx) => we::Instruction::TableInit { 
-            table: state.map_table_idx(table_idx)?.to_u32(), 
-            elem_index: state.map_element_idx(element_idx)?.to_u32() 
+        Instr::TableInit(table_idx, element_idx) => we::Instruction::TableInit {
+            table: state.map_table_idx(table_idx)?.to_u32(),
+            elem_index: state.map_element_idx(element_idx)?.to_u32(),
         },
-        Instr::ElemDrop(element_idx) => we::Instruction::ElemDrop(state.map_element_idx(element_idx)?.to_u32()),
+        Instr::ElemDrop(element_idx) => {
+            we::Instruction::ElemDrop(state.map_element_idx(element_idx)?.to_u32())
+        }
 
         Instr::Local(LocalOp::Get, local_idx) => we::Instruction::LocalGet(local_idx.to_u32()),
         Instr::Local(LocalOp::Set, local_idx) => we::Instruction::LocalSet(local_idx.to_u32()),
@@ -602,14 +610,19 @@ fn encode_instruction(
         Instr::MemoryGrow(memory_idx) => {
             we::Instruction::MemoryGrow(state.map_memory_idx(memory_idx)?.to_u32())
         }
-        
+
         Instr::MemoryFill => we::Instruction::MemoryFill(0),
-        Instr::MemoryCopy => we::Instruction::MemoryCopy { src_mem: 0, dst_mem: 0 },
-        Instr::MemoryInit(data_idx) => we::Instruction::MemoryInit { 
-            mem: 0, 
-            data_index: state.map_data_idx(data_idx)?.to_u32() 
+        Instr::MemoryCopy => we::Instruction::MemoryCopy {
+            src_mem: 0,
+            dst_mem: 0,
         },
-        Instr::DataDrop(data_idx) => we::Instruction::DataDrop(state.map_data_idx(data_idx)?.to_u32()),
+        Instr::MemoryInit(data_idx) => we::Instruction::MemoryInit {
+            mem: 0,
+            data_index: state.map_data_idx(data_idx)?.to_u32(),
+        },
+        Instr::DataDrop(data_idx) => {
+            we::Instruction::DataDrop(state.map_data_idx(data_idx)?.to_u32())
+        }
 
         Instr::Const(Val::I32(value)) => we::Instruction::I32Const(value),
         Instr::Const(Val::I64(value)) => we::Instruction::I64Const(value),
@@ -649,14 +662,14 @@ fn encode_instruction(
         Instr::Unary(UnaryOp::I64TruncF32U) => we::Instruction::I64TruncF32U,
         Instr::Unary(UnaryOp::I64TruncF64S) => we::Instruction::I64TruncF64S,
         Instr::Unary(UnaryOp::I64TruncF64U) => we::Instruction::I64TruncF64U,
-        Instr::Unary(UnaryOp::I32TruncSatF32S)  => we::Instruction::I32TruncSatF32S,
-        Instr::Unary(UnaryOp::I32TruncSatF32U)  => we::Instruction::I32TruncSatF32U,
-        Instr::Unary(UnaryOp::I32TruncSatF64S)  => we::Instruction::I32TruncSatF64S,
-        Instr::Unary(UnaryOp::I32TruncSatF64U)  => we::Instruction::I32TruncSatF64U,
-        Instr::Unary(UnaryOp::I64TruncSatF32S)  => we::Instruction::I64TruncSatF32S,
-        Instr::Unary(UnaryOp::I64TruncSatF32U)  => we::Instruction::I64TruncSatF32U,
-        Instr::Unary(UnaryOp::I64TruncSatF64S)  => we::Instruction::I64TruncSatF64S,
-        Instr::Unary(UnaryOp::I64TruncSatF64U)  => we::Instruction::I64TruncSatF64U,
+        Instr::Unary(UnaryOp::I32TruncSatF32S) => we::Instruction::I32TruncSatF32S,
+        Instr::Unary(UnaryOp::I32TruncSatF32U) => we::Instruction::I32TruncSatF32U,
+        Instr::Unary(UnaryOp::I32TruncSatF64S) => we::Instruction::I32TruncSatF64S,
+        Instr::Unary(UnaryOp::I32TruncSatF64U) => we::Instruction::I32TruncSatF64U,
+        Instr::Unary(UnaryOp::I64TruncSatF32S) => we::Instruction::I64TruncSatF32S,
+        Instr::Unary(UnaryOp::I64TruncSatF32U) => we::Instruction::I64TruncSatF32U,
+        Instr::Unary(UnaryOp::I64TruncSatF64S) => we::Instruction::I64TruncSatF64S,
+        Instr::Unary(UnaryOp::I64TruncSatF64U) => we::Instruction::I64TruncSatF64U,
         Instr::Unary(UnaryOp::F32ConvertI32S) => we::Instruction::F32ConvertI32S,
         Instr::Unary(UnaryOp::F32ConvertI32U) => we::Instruction::F32ConvertI32U,
         Instr::Unary(UnaryOp::F32ConvertI64S) => we::Instruction::F32ConvertI64S,
@@ -753,15 +766,13 @@ fn encode_instruction(
         Instr::Binary(BinaryOp::F64Min) => we::Instruction::F64Min,
         Instr::Binary(BinaryOp::F64Max) => we::Instruction::F64Max,
         Instr::Binary(BinaryOp::F64Copysign) => we::Instruction::F64Copysign,
-        
+
         Instr::RefNull(ty) => we::Instruction::RefNull(match ty {
             RefType::FuncRef => we::ValType::FuncRef,
             RefType::ExternRef => we::ValType::ExternRef,
         }),
         Instr::RefIsNull => we::Instruction::RefIsNull,
-        Instr::RefFunc(idx) => we::Instruction::RefFunc(
-            state.map_function_idx(idx)?.to_u32()
-        ),
+        Instr::RefFunc(idx) => we::Instruction::RefFunc(state.map_function_idx(idx)?.to_u32()),
     })
 }
 
@@ -884,7 +895,7 @@ impl From<ValType> for we::ValType {
             F32 => we::ValType::F32,
             F64 => we::ValType::F64,
             Ref(RefType::ExternRef) => we::ValType::ExternRef,
-            Ref(RefType::FuncRef) => we::ValType::FuncRef
+            Ref(RefType::FuncRef) => we::ValType::FuncRef,
         }
     }
 }

@@ -102,7 +102,7 @@ pub enum Hook {
 
     Local,
     Global,
-    
+
     RefIsNull,
 
     TableGet,

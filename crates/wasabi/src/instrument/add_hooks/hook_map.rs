@@ -74,15 +74,12 @@ impl Hook {
         let wasm = {
             // prepend two I32 for (function idx, instr idx)
             let mut lowlevel_args = vec![I32, I32];
-            lowlevel_args.extend(
-                args.iter()
-                    .flat_map(
-                        |Arg {
-                             name: _name,
-                             ref ty,
-                         }| std::slice::from_ref(ty),
-                    ),
-            );
+            lowlevel_args.extend(args.iter().flat_map(
+                |Arg {
+                     name: _name,
+                     ref ty,
+                 }| std::slice::from_ref(ty),
+            ));
 
             Function::new_imported(
                 // Hooks do not return anything
@@ -285,7 +282,7 @@ impl HookMap {
             /* instructions that need additional information and thus have own method */
 
             Block(_) | Loop(_) | Else | End => panic!("cannot get hook for block-type instruction with this method, please use the other methods specialized to the block type"),
-            
+
             RefIsNull => {
                 assert_eq!(polymorphic_tys.len(), 1, "ref.is_null has only one argument");
                 let args = args!(isNull: I32);

@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
-use wasabi::{instrument::add_hooks, options::{HookSet, Hook}};
+use wasabi::{
+    instrument::add_hooks,
+    options::{Hook, HookSet},
+};
 use wasabi_wasm::Module;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
-
 
 #[derive(Serialize, Deserialize)]
 pub struct Output {
@@ -15,7 +17,18 @@ pub fn instrument_wasm(val: &[u8]) -> Result<JsValue, JsValue> {
     console_error_panic_hook::set_once();
     // TODO: make hookset configurable
     let mut _enabled_hooks = HookSet::new();
-    for hook in [Hook::Begin, Hook::Call, Hook::Global, Hook::Load, Hook::Store, Hook::MemoryFill, Hook::MemoryCopy, Hook::TableSet, Hook::TableGet, Hook::Return] {
+    for hook in [
+        Hook::Begin,
+        Hook::Call,
+        Hook::Global,
+        Hook::Load,
+        Hook::Store,
+        Hook::MemoryFill,
+        Hook::MemoryCopy,
+        Hook::TableSet,
+        Hook::TableGet,
+        Hook::Return,
+    ] {
         _enabled_hooks.insert(hook);
     }
     // TODO: make optnodejs configurable

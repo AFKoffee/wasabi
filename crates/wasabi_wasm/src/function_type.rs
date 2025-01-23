@@ -261,7 +261,7 @@ const fn val_type_to_goedel_number(val_type: ValType) -> usize {
         ValType::F32 => 2,
         ValType::F64 => 3,
         ValType::Ref(RefType::FuncRef) => 4,
-        ValType::Ref(RefType::ExternRef) => 5
+        ValType::Ref(RefType::ExternRef) => 5,
     }
 }
 
@@ -297,7 +297,7 @@ fn test_goedel_number_constants() {
     assert_eq!(val_type_to_goedel_number(ValType::I32), 0);
     assert_eq!(val_type_to_goedel_number(ValType::F64), 3);
     assert_eq!(val_type_seq_max_goedel_number(0), 0);
-    assert_eq!(val_type_seq_max_goedel_number(1), 6 );
+    assert_eq!(val_type_seq_max_goedel_number(1), 6);
     assert_eq!(val_type_seq_max_goedel_number(2), 42);
     assert_eq!(val_type_seq_max_goedel_number(3), 258);
     assert_eq!(val_type_seq_max_goedel_number(4), 1554);

@@ -676,16 +676,19 @@ impl<'module> TypeChecker<'module> {
                 if frame.unreachable {
                     continue;
                 } else {
-                    return Err(TypeError::from("expected a value, but value stack was empty"))
+                    return Err(TypeError::from(
+                        "expected a value, but value stack was empty",
+                    ));
                 }
             } else if let Some(actual) = frame.value_stack.get(len - i - 1) {
                 expected.join(*actual).ok_or_else(|| {
                     TypeError::from(format!("expected type {expected}, but got {actual}"))
                 })?;
             } else if !frame.unreachable {
-                return Err(TypeError::from("expected a value, but value stack was empty"))
+                return Err(TypeError::from(
+                    "expected a value, but value stack was empty",
+                ));
             }
-
         }
 
         Ok(())
