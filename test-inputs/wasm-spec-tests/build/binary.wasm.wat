@@ -1,4 +1,5 @@
 (module
-  (type $t0 (func))
-  (func $f0 (type $t0))
-  (start $f0))
+  (type $#type0 (;0;) (func))
+  (start $#func0)
+  (func $#func0 (;0;) (type $#type0))
+)

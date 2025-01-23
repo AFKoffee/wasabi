@@ -1,47 +1,59 @@
 (module
-  (type $t0 (func (result i32)))
-  (type $t1 (func))
-  (func $f0 (type $t0) (result i32)
-    unreachable
-    select)
-  (func $f1 (type $t0) (result i32)
+  (type $#type0 (;0;) (func (result i32)))
+  (type $#type1 (;1;) (func))
+  (table $#table0 (;0;) 1 funcref)
+  (func $#func0 (;0;) (type $#type0) (result i32)
     unreachable
     select
-    nop)
-  (func $f2 (type $t0) (result i32)
+  )
+  (func $#func1 (;1;) (type $#type0) (result i32)
     unreachable
     select
-    select)
-  (func $f3 (type $t0) (result i32)
-    unreachable
-    select
-    select)
-  (func $f4 (type $t0) (result i32)
+    nop
+  )
+  (func $#func2 (;2;) (type $#type0) (result i32)
     unreachable
     select
     select
-    select)
-  (func $f5 (type $t0) (result i32)
+  )
+  (func $#func3 (;3;) (type $#type0) (result i32)
     unreachable
-    select (result i32))
-  (func $f6 (type $t0) (result i32)
+    select
+    select
+  )
+  (func $#func4 (;4;) (type $#type0) (result i32)
     unreachable
-    select (result i32))
-  (func $f7 (type $t0) (result i32)
+    select
+    select
+    select
+  )
+  (func $#func5 (;5;) (type $#type0) (result i32)
     unreachable
     select (result i32)
-    select)
-  (func $f8 (type $t0) (result i32)
+  )
+  (func $#func6 (;6;) (type $#type0) (result i32)
     unreachable
     select (result i32)
-    select (result i32))
-  (func $f9 (type $t0) (result i32)
+  )
+  (func $#func7 (;7;) (type $#type0) (result i32)
+    unreachable
+    select (result i32)
+    select
+  )
+  (func $#func8 (;8;) (type $#type0) (result i32)
+    unreachable
+    select (result i32)
+    select (result i32)
+  )
+  (func $#func9 (;9;) (type $#type0) (result i32)
     unreachable
     select
-    call_indirect $T0 (type $t1))
-  (func $f10 (type $t0) (result i32)
+    call_indirect (type $#type1)
+  )
+  (func $#func10 (;10;) (type $#type0) (result i32)
     unreachable
     select
-    call_indirect $T0 (type $t1)
-    select)
-  (table $T0 1 funcref))
+    call_indirect (type $#type1)
+    select
+  )
+)

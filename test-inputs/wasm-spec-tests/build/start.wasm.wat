@@ -1,4 +1,5 @@
 (module
-  (type $t0 (func))
-  (import "spectest" "print" (func $spectest.print (type $t0)))
-  (start $spectest.print))
+  (type $#type0 (;0;) (func))
+  (import "spectest" "print" (func $#func0 (;0;) (type $#type0)))
+  (start $#func0)
+)

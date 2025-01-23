@@ -1,87 +1,115 @@
 (module
-  (type $t0 (func (result i32)))
-  (type $t1 (func (result i64)))
-  (type $t2 (func (result f32)))
-  (type $t3 (func (result f64)))
-  (type $t4 (func (param i32) (result i32)))
-  (type $t5 (func (param i64) (result i64)))
-  (type $t6 (func (param f32) (result f32)))
-  (type $t7 (func (param f64) (result f64)))
-  (type $t8 (func (param i64 f32 f64 i32 i32)))
-  (type $t9 (func (param i64 f32 f64 i32 i32) (result f64)))
-  (func $type-local-i32 (type $t0) (result i32)
-    (local $l0 i32)
-    local.get $l0)
-  (func $type-local-i64 (type $t1) (result i64)
-    (local $l0 i64)
-    local.get $l0)
-  (func $type-local-f32 (type $t2) (result f32)
-    (local $l0 f32)
-    local.get $l0)
-  (func $type-local-f64 (type $t3) (result f64)
-    (local $l0 f64)
-    local.get $l0)
-  (func $type-param-i32 (type $t4) (param $p0 i32) (result i32)
-    local.get $p0)
-  (func $type-param-i64 (type $t5) (param $p0 i64) (result i64)
-    local.get $p0)
-  (func $type-param-f32 (type $t6) (param $p0 f32) (result f32)
-    local.get $p0)
-  (func $type-param-f64 (type $t7) (param $p0 f64) (result f64)
-    local.get $p0)
-  (func $type-mixed (type $t8) (param $p0 i64) (param $p1 f32) (param $p2 f64) (param $p3 i32) (param $p4 i32)
-    (local $l5 f32) (local $l6 i64) (local $l7 i64) (local $l8 f64)
-    local.get $p0
+  (type $#type0 (;0;) (func (result i32)))
+  (type $#type1 (;1;) (func (result i64)))
+  (type $#type2 (;2;) (func (result f32)))
+  (type $#type3 (;3;) (func (result f64)))
+  (type $#type4 (;4;) (func (param i32) (result i32)))
+  (type $#type5 (;5;) (func (param i64) (result i64)))
+  (type $#type6 (;6;) (func (param f32) (result f32)))
+  (type $#type7 (;7;) (func (param f64) (result f64)))
+  (type $#type8 (;8;) (func (param i64 f32 f64 i32 i32)))
+  (type $#type9 (;9;) (func (param i64 f32 f64 i32 i32) (result f64)))
+  (export "type-local-i32" (func $#func0))
+  (export "type-local-i64" (func $#func1))
+  (export "type-local-f32" (func $#func2))
+  (export "type-local-f64" (func $#func3))
+  (export "type-param-i32" (func $#func4))
+  (export "type-param-i64" (func $#func5))
+  (export "type-param-f32" (func $#func6))
+  (export "type-param-f64" (func $#func7))
+  (export "type-mixed" (func $#func8))
+  (export "read" (func $#func9))
+  (export "as-block-value" (func $#func10))
+  (export "as-loop-value" (func $#func11))
+  (export "as-br-value" (func $#func12))
+  (export "as-br_if-value" (func $#func13))
+  (export "as-br_if-value-cond" (func $#func14))
+  (export "as-br_table-value" (func $#func15))
+  (export "as-return-value" (func $#func16))
+  (export "as-if-then" (func $#func17))
+  (export "as-if-else" (func $#func18))
+  (func $#func0 (;0;) (type $#type0) (result i32)
+    (local $#local0 i32)
+    local.get $#local0
+  )
+  (func $#func1 (;1;) (type $#type1) (result i64)
+    (local $#local0 i64)
+    local.get $#local0
+  )
+  (func $#func2 (;2;) (type $#type2) (result f32)
+    (local $#local0 f32)
+    local.get $#local0
+  )
+  (func $#func3 (;3;) (type $#type3) (result f64)
+    (local $#local0 f64)
+    local.get $#local0
+  )
+  (func $#func4 (;4;) (type $#type4) (param $#local0 i32) (result i32)
+    local.get $#local0
+  )
+  (func $#func5 (;5;) (type $#type5) (param $#local0 i64) (result i64)
+    local.get $#local0
+  )
+  (func $#func6 (;6;) (type $#type6) (param $#local0 f32) (result f32)
+    local.get $#local0
+  )
+  (func $#func7 (;7;) (type $#type7) (param $#local0 f64) (result f64)
+    local.get $#local0
+  )
+  (func $#func8 (;8;) (type $#type8) (param $#local0 i64) (param $#local1 f32) (param $#local2 f64) (param $#local3 i32) (param $#local4 i32)
+    (local $#local5 f32) (local $#local6 i64) (local $#local7 i64) (local $#local8 f64)
+    local.get $#local0
     i64.eqz
     drop
-    local.get $p1
+    local.get $#local1
     f32.neg
     drop
-    local.get $p2
+    local.get $#local2
     f64.neg
     drop
-    local.get $p3
+    local.get $#local3
     i32.eqz
     drop
-    local.get $p4
+    local.get $#local4
     i32.eqz
     drop
-    local.get $l5
+    local.get $#local5
     f32.neg
     drop
-    local.get $l6
+    local.get $#local6
     i64.eqz
     drop
-    local.get $l7
+    local.get $#local7
     i64.eqz
     drop
-    local.get $l8
+    local.get $#local8
     f64.neg
-    drop)
-  (func $read (type $t9) (param $p0 i64) (param $p1 f32) (param $p2 f64) (param $p3 i32) (param $p4 i32) (result f64)
-    (local $l5 f32) (local $l6 i64) (local $l7 i64) (local $l8 f64)
+    drop
+  )
+  (func $#func9 (;9;) (type $#type9) (param $#local0 i64) (param $#local1 f32) (param $#local2 f64) (param $#local3 i32) (param $#local4 i32) (result f64)
+    (local $#local5 f32) (local $#local6 i64) (local $#local7 i64) (local $#local8 f64)
     f32.const 0x1.6p+2 (;=5.5;)
-    local.set $l5
+    local.set $#local5
     i64.const 6
-    local.set $l6
+    local.set $#local6
     f64.const 0x1p+3 (;=8;)
-    local.set $l8
-    local.get $p0
+    local.set $#local8
+    local.get $#local0
     f64.convert_i64_u
-    local.get $p1
+    local.get $#local1
     f64.promote_f32
-    local.get $p2
-    local.get $p3
+    local.get $#local2
+    local.get $#local3
     f64.convert_i32_u
-    local.get $p4
+    local.get $#local4
     f64.convert_i32_s
-    local.get $l5
+    local.get $#local5
     f64.promote_f32
-    local.get $l6
+    local.get $#local6
     f64.convert_i64_u
-    local.get $l7
+    local.get $#local7
     f64.convert_i64_u
-    local.get $l8
+    local.get $#local8
     f64.add
     f64.add
     f64.add
@@ -89,38 +117,44 @@
     f64.add
     f64.add
     f64.add
-    f64.add)
-  (func $as-block-value (type $t4) (param $p0 i32) (result i32)
-    block $B0 (result i32)
-      local.get $p0
-    end)
-  (func $as-loop-value (type $t4) (param $p0 i32) (result i32)
-    loop $L0 (result i32)
-      local.get $p0
-    end)
-  (func $as-br-value (type $t4) (param $p0 i32) (result i32)
-    block $B0 (result i32)
-      local.get $p0
-      br $B0
-    end)
-  (func $as-br_if-value (type $t4) (param $p0 i32) (result i32)
-    block $B0 (result i32)
-      local.get $p0
+    f64.add
+  )
+  (func $#func10 (;10;) (type $#type4) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
+      local.get $#local0
+    end
+  )
+  (func $#func11 (;11;) (type $#type4) (param $#local0 i32) (result i32)
+    loop $#label0 (result i32)
+      local.get $#local0
+    end
+  )
+  (func $#func12 (;12;) (type $#type4) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
+      local.get $#local0
+      br $#label0
+    end
+  )
+  (func $#func13 (;13;) (type $#type4) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
+      local.get $#local0
       i32.const 1
-      br_if $B0
-    end)
-  (func $as-br_if-value-cond (type $t4) (param $p0 i32) (result i32)
-    block $B0 (result i32)
-      local.get $p0
-      local.get $p0
-      br_if $B0
-    end)
-  (func $as-br_table-value (type $t4) (param $p0 i32) (result i32)
-    block $B0
-      block $B1
-        block $B2
-          local.get $p0
-          br_table $B2 $B1 $B0
+      br_if $#label0
+    end
+  )
+  (func $#func14 (;14;) (type $#type4) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
+      local.get $#local0
+      local.get $#local0
+      br_if $#label0
+    end
+  )
+  (func $#func15 (;15;) (type $#type4) (param $#local0 i32) (result i32)
+    block $#label0
+      block $#label1
+        block $#label2
+          local.get $#local0
+          br_table $#label2 $#label1 $#label0
           i32.const 0
           return
         end
@@ -130,40 +164,26 @@
       i32.const 2
       return
     end
-    i32.const 3)
-  (func $as-return-value (type $t4) (param $p0 i32) (result i32)
-    local.get $p0
-    return)
-  (func $as-if-then (type $t4) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
-      local.get $p0
+    i32.const 3
+  )
+  (func $#func16 (;16;) (type $#type4) (param $#local0 i32) (result i32)
+    local.get $#local0
+    return
+  )
+  (func $#func17 (;17;) (type $#type4) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
+      local.get $#local0
     else
       i32.const 0
-    end)
-  (func $as-if-else (type $t4) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
+    end
+  )
+  (func $#func18 (;18;) (type $#type4) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
       i32.const 1
     else
-      local.get $p0
-    end)
-  (export "type-local-i32" (func $type-local-i32))
-  (export "type-local-i64" (func $type-local-i64))
-  (export "type-local-f32" (func $type-local-f32))
-  (export "type-local-f64" (func $type-local-f64))
-  (export "type-param-i32" (func $type-param-i32))
-  (export "type-param-i64" (func $type-param-i64))
-  (export "type-param-f32" (func $type-param-f32))
-  (export "type-param-f64" (func $type-param-f64))
-  (export "type-mixed" (func $type-mixed))
-  (export "read" (func $read))
-  (export "as-block-value" (func $as-block-value))
-  (export "as-loop-value" (func $as-loop-value))
-  (export "as-br-value" (func $as-br-value))
-  (export "as-br_if-value" (func $as-br_if-value))
-  (export "as-br_if-value-cond" (func $as-br_if-value-cond))
-  (export "as-br_table-value" (func $as-br_table-value))
-  (export "as-return-value" (func $as-return-value))
-  (export "as-if-then" (func $as-if-then))
-  (export "as-if-else" (func $as-if-else)))
+      local.get $#local0
+    end
+  )
+)

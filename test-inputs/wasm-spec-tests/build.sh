@@ -14,8 +14,12 @@ git log -1 > ../../build/spec-repository-version
 ./wasm -e '' -v > ../../build/spec-interpreter-version
 cd ../../
 
+# Clone the wasm testsuite repo
+rm -rf testsuite/
+git clone git@github.com:WebAssembly/testsuite.git
+
 # Convert .wast test files to .wasm binaries.
-for file in spec/test/core/*.wast
+for file in testsuite/*.wast
 do
 	name=$(basename $file .wast)
 	spec/interpreter/wasm $file -o build/$name.wasm || echo "error building $file"
@@ -23,10 +27,10 @@ done
 
 for file in build/*.wasm
 do
-	if ! wasm-validate "$file"; then
+	if ! wasm-tools validate "$file"; then
 		echo "invalid binary $file, deleting..."
 		rm "$file"
 	else
-		wasm2wat --generate-names "$file" -o "$file.wat"
+		wasm-tools print "$file" -o "$file.wat" --name-unnamed
 	fi
 done

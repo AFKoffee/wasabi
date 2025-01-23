@@ -1,437 +1,456 @@
 (module
-  (type $t0 (func (result i32)))
-  (type $t1 (func (param i32) (result i32)))
-  (func $block (type $t0) (result i32)
-    block $B0 (result i32)
+  (type $#type0 (;0;) (func (result i32)))
+  (type $#type1 (;1;) (func (param i32) (result i32)))
+  (export "block" (func $#func0))
+  (export "loop1" (func $#func1))
+  (export "loop2" (func $#func2))
+  (export "loop3" (func $#func3))
+  (export "loop4" (func $#func4))
+  (export "loop5" (func $#func5))
+  (export "loop6" (func $#func6))
+  (export "if" (func $#func7))
+  (export "if2" (func $#func8))
+  (export "switch" (func $#func9))
+  (export "return" (func $#func10))
+  (export "br_if0" (func $#func11))
+  (export "br_if1" (func $#func12))
+  (export "br_if2" (func $#func13))
+  (export "br_if3" (func $#func14))
+  (export "br" (func $#func15))
+  (export "shadowing" (func $#func16))
+  (export "redefinition" (func $#func17))
+  (func $#func0 (;0;) (type $#type0) (result i32)
+    block $#label0 (result i32)
       i32.const 1
-      br $B0
+      br $#label0
       i32.const 0
-    end)
-  (func $loop1 (type $t0) (result i32)
-    (local $l0 i32)
+    end
+  )
+  (func $#func1 (;1;) (type $#type0) (result i32)
+    (local $#local0 i32)
     i32.const 0
-    local.set $l0
-    block $B0 (result i32)
-      loop $L1 (result i32)
-        local.get $l0
+    local.set $#local0
+    block $#label0 (result i32)
+      loop $#label1 (result i32)
+        local.get $#local0
         i32.const 1
         i32.add
-        local.set $l0
-        local.get $l0
+        local.set $#local0
+        local.get $#local0
         i32.const 5
         i32.eq
-        if $I2
-          local.get $l0
-          br $B0
+        if $#label2
+          local.get $#local0
+          br $#label0
         end
-        br $L1
+        br $#label1
       end
-    end)
-  (func $loop2 (type $t0) (result i32)
-    (local $l0 i32)
+    end
+  )
+  (func $#func2 (;2;) (type $#type0) (result i32)
+    (local $#local0 i32)
     i32.const 0
-    local.set $l0
-    block $B0 (result i32)
-      loop $L1 (result i32)
-        local.get $l0
+    local.set $#local0
+    block $#label0 (result i32)
+      loop $#label1 (result i32)
+        local.get $#local0
         i32.const 1
         i32.add
-        local.set $l0
-        local.get $l0
+        local.set $#local0
+        local.get $#local0
         i32.const 5
         i32.eq
-        if $I2
-          br $L1
+        if $#label2
+          br $#label1
         end
-        local.get $l0
+        local.get $#local0
         i32.const 8
         i32.eq
-        if $I3
-          local.get $l0
-          br $B0
+        if $#label2
+          local.get $#local0
+          br $#label0
         end
-        local.get $l0
+        local.get $#local0
         i32.const 1
         i32.add
-        local.set $l0
-        br $L1
+        local.set $#local0
+        br $#label1
       end
-    end)
-  (func $loop3 (type $t0) (result i32)
-    (local $l0 i32)
+    end
+  )
+  (func $#func3 (;3;) (type $#type0) (result i32)
+    (local $#local0 i32)
     i32.const 0
-    local.set $l0
-    block $B0 (result i32)
-      loop $L1 (result i32)
-        local.get $l0
+    local.set $#local0
+    block $#label0 (result i32)
+      loop $#label1 (result i32)
+        local.get $#local0
         i32.const 1
         i32.add
-        local.set $l0
-        local.get $l0
+        local.set $#local0
+        local.get $#local0
         i32.const 5
         i32.eq
-        if $I2
-          local.get $l0
-          br $B0
+        if $#label2
+          local.get $#local0
+          br $#label0
         end
-        local.get $l0
+        local.get $#local0
       end
-    end)
-  (func $loop4 (type $t1) (param $p0 i32) (result i32)
-    (local $l1 i32)
+    end
+  )
+  (func $#func4 (;4;) (type $#type1) (param $#local0 i32) (result i32)
+    (local $#local1 i32)
     i32.const 1
-    local.set $l1
-    block $B0 (result i32)
-      loop $L1 (result i32)
-        local.get $l1
-        local.get $l1
+    local.set $#local1
+    block $#label0 (result i32)
+      loop $#label1 (result i32)
+        local.get $#local1
+        local.get $#local1
         i32.add
-        local.set $l1
-        local.get $l1
-        local.get $p0
+        local.set $#local1
+        local.get $#local1
+        local.get $#local0
         i32.gt_u
-        if $I2
-          local.get $l1
-          br $B0
+        if $#label2
+          local.get $#local1
+          br $#label0
         end
-        br $L1
+        br $#label1
       end
-    end)
-  (func $loop5 (type $t0) (result i32)
-    loop $L0 (result i32)
+    end
+  )
+  (func $#func5 (;5;) (type $#type0) (result i32)
+    loop $#label0 (result i32)
       i32.const 1
     end
     i32.const 1
-    i32.add)
-  (func $loop6 (type $t0) (result i32)
-    loop $L0 (result i32)
+    i32.add
+  )
+  (func $#func6 (;6;) (type $#type0) (result i32)
+    loop $#label0 (result i32)
       i32.const 0
-      br_if $L0
+      br_if $#label0
       i32.const 3
-    end)
-  (func $if (type $t0) (result i32)
-    (local $l0 i32)
-    i32.const 0
-    local.set $l0
-    block $B0
-      i32.const 1
-      if $I1
-        br $I1
-        i32.const 666
-        local.set $l0
-      end
-      local.get $l0
-      i32.const 1
-      i32.add
-      local.set $l0
-      i32.const 1
-      if $I2
-        br $I2
-        i32.const 666
-        local.set $l0
-      else
-        i32.const 888
-        local.set $l0
-      end
-      local.get $l0
-      i32.const 1
-      i32.add
-      local.set $l0
-      i32.const 1
-      if $I3
-        br $I3
-        i32.const 666
-        local.set $l0
-      else
-        i32.const 888
-        local.set $l0
-      end
-      local.get $l0
-      i32.const 1
-      i32.add
-      local.set $l0
-      i32.const 0
-      if $I4
-        i32.const 888
-        local.set $l0
-      else
-        br $I4
-        i32.const 666
-        local.set $l0
-      end
-      local.get $l0
-      i32.const 1
-      i32.add
-      local.set $l0
-      i32.const 0
-      if $I5
-        i32.const 888
-        local.set $l0
-      else
-        br $I5
-        i32.const 666
-        local.set $l0
-      end
-      local.get $l0
-      i32.const 1
-      i32.add
-      local.set $l0
     end
-    local.get $l0)
-  (func $if2 (type $t0) (result i32)
-    (local $l0 i32)
+  )
+  (func $#func7 (;7;) (type $#type0) (result i32)
+    (local $#local0 i32)
     i32.const 0
-    local.set $l0
-    block $B0
+    local.set $#local0
+    block $#label0
       i32.const 1
-      if $I1
-        br $I1
+      if $#label1
+        br $#label1
         i32.const 666
-        local.set $l0
+        local.set $#local0
       end
-      local.get $l0
+      local.get $#local0
       i32.const 1
       i32.add
-      local.set $l0
+      local.set $#local0
       i32.const 1
-      if $I2
-        br $I2
+      if $#label1
+        br $#label1
         i32.const 666
-        local.set $l0
+        local.set $#local0
       else
         i32.const 888
-        local.set $l0
+        local.set $#local0
       end
-      local.get $l0
+      local.get $#local0
       i32.const 1
       i32.add
-      local.set $l0
+      local.set $#local0
       i32.const 1
-      if $I3
-        br $I3
+      if $#label1
+        br $#label1
         i32.const 666
-        local.set $l0
+        local.set $#local0
       else
         i32.const 888
-        local.set $l0
+        local.set $#local0
       end
-      local.get $l0
+      local.get $#local0
       i32.const 1
       i32.add
-      local.set $l0
+      local.set $#local0
       i32.const 0
-      if $I4
+      if $#label1
         i32.const 888
-        local.set $l0
+        local.set $#local0
       else
-        br $I4
+        br $#label1
         i32.const 666
-        local.set $l0
+        local.set $#local0
       end
-      local.get $l0
+      local.get $#local0
       i32.const 1
       i32.add
-      local.set $l0
+      local.set $#local0
       i32.const 0
-      if $I5
+      if $#label1
         i32.const 888
-        local.set $l0
+        local.set $#local0
       else
-        br $I5
+        br $#label1
         i32.const 666
-        local.set $l0
+        local.set $#local0
       end
-      local.get $l0
+      local.get $#local0
       i32.const 1
       i32.add
-      local.set $l0
+      local.set $#local0
     end
-    local.get $l0)
-  (func $switch (type $t1) (param $p0 i32) (result i32)
-    block $B0 (result i32)
+    local.get $#local0
+  )
+  (func $#func8 (;8;) (type $#type0) (result i32)
+    (local $#local0 i32)
+    i32.const 0
+    local.set $#local0
+    block $#label0
+      i32.const 1
+      if $#label1
+        br $#label1
+        i32.const 666
+        local.set $#local0
+      end
+      local.get $#local0
+      i32.const 1
+      i32.add
+      local.set $#local0
+      i32.const 1
+      if $#label1
+        br $#label1
+        i32.const 666
+        local.set $#local0
+      else
+        i32.const 888
+        local.set $#local0
+      end
+      local.get $#local0
+      i32.const 1
+      i32.add
+      local.set $#local0
+      i32.const 1
+      if $#label1
+        br $#label1
+        i32.const 666
+        local.set $#local0
+      else
+        i32.const 888
+        local.set $#local0
+      end
+      local.get $#local0
+      i32.const 1
+      i32.add
+      local.set $#local0
+      i32.const 0
+      if $#label1
+        i32.const 888
+        local.set $#local0
+      else
+        br $#label1
+        i32.const 666
+        local.set $#local0
+      end
+      local.get $#local0
+      i32.const 1
+      i32.add
+      local.set $#local0
+      i32.const 0
+      if $#label1
+        i32.const 888
+        local.set $#local0
+      else
+        br $#label1
+        i32.const 666
+        local.set $#local0
+      end
+      local.get $#local0
+      i32.const 1
+      i32.add
+      local.set $#local0
+    end
+    local.get $#local0
+  )
+  (func $#func9 (;9;) (type $#type1) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
       i32.const 10
-      block $B1 (result i32)
-        block $B2
-          block $B3
-            block $B4
-              block $B5
-                block $B6
-                  local.get $p0
-                  br_table $B2 $B6 $B5 $B4 $B3
+      block $#label1 (result i32)
+        block $#label2
+          block $#label3
+            block $#label4
+              block $#label5
+                block $#label6
+                  local.get $#local0
+                  br_table $#label2 $#label6 $#label5 $#label4 $#label3
                 end
               end
               i32.const 2
-              br $B1
+              br $#label1
             end
             i32.const 3
-            br $B0
+            br $#label0
           end
         end
         i32.const 5
       end
       i32.mul
-    end)
-  (func $return (type $t1) (param $p0 i32) (result i32)
-    block $B0
-      block $B1
-        block $B2
-          local.get $p0
-          br_table $B2 $B1
-          br $B0
+    end
+  )
+  (func $#func10 (;10;) (type $#type1) (param $#local0 i32) (result i32)
+    block $#label0
+      block $#label1
+        block $#label2
+          local.get $#local0
+          br_table $#label2 $#label1
+          br $#label0
         end
         i32.const 0
         return
       end
     end
-    i32.const 2)
-  (func $br_if0 (type $t0) (result i32)
-    (local $l0 i32)
+    i32.const 2
+  )
+  (func $#func11 (;11;) (type $#type0) (result i32)
+    (local $#local0 i32)
     i32.const 0
-    local.set $l0
-    block $B0 (result i32)
-      block $B1
+    local.set $#local0
+    block $#label0 (result i32)
+      block $#label1
         i32.const 0
-        br_if $B1
-        local.get $l0
+        br_if $#label1
+        local.get $#local0
         i32.const 1
         i32.or
-        local.set $l0
+        local.set $#local0
         i32.const 1
-        br_if $B1
-        local.get $l0
+        br_if $#label1
+        local.get $#local0
         i32.const 2
         i32.or
-        local.set $l0
+        local.set $#local0
       end
-      block $B2 (result i32)
-        local.get $l0
+      block $#label1 (result i32)
+        local.get $#local0
         i32.const 4
         i32.or
-        local.set $l0
-        local.get $l0
+        local.set $#local0
+        local.get $#local0
       end
       i32.const 0
-      br_if $B0
+      br_if $#label0
       drop
-      local.get $l0
+      local.get $#local0
       i32.const 8
       i32.or
-      local.set $l0
-      block $B3 (result i32)
-        local.get $l0
+      local.set $#local0
+      block $#label1 (result i32)
+        local.get $#local0
         i32.const 16
         i32.or
-        local.set $l0
-        local.get $l0
+        local.set $#local0
+        local.get $#local0
       end
       i32.const 1
-      br_if $B0
+      br_if $#label0
       drop
-      local.get $l0
+      local.get $#local0
       i32.const 32
       i32.or
-      local.set $l0
-      local.get $l0
-    end)
-  (func $br_if1 (type $t0) (result i32)
-    block $B0 (result i32)
-      block $B1 (result i32)
+      local.set $#local0
+      local.get $#local0
+    end
+  )
+  (func $#func12 (;12;) (type $#type0) (result i32)
+    block $#label0 (result i32)
+      block $#label1 (result i32)
         i32.const 1
-        br $B1
+        br $#label1
       end
       i32.const 1
-      br_if $B0
+      br_if $#label0
       drop
       i32.const 0
-    end)
-  (func $br_if2 (type $t0) (result i32)
-    block $B0 (result i32)
+    end
+  )
+  (func $#func13 (;13;) (type $#type0) (result i32)
+    block $#label0 (result i32)
       i32.const 1
-      if $I1
-        block $B2 (result i32)
+      if $#label1
+        block $#label2 (result i32)
           i32.const 1
-          br $B2
+          br $#label2
         end
         i32.const 1
-        br_if $B0
+        br_if $#label0
         drop
       end
       i32.const 0
-    end)
-  (func $br_if3 (type $t0) (result i32)
-    (local $l0 i32)
-    block $B0 (result i32)
-      block $B1 (result i32)
+    end
+  )
+  (func $#func14 (;14;) (type $#type0) (result i32)
+    (local $#local0 i32)
+    block $#label0 (result i32)
+      block $#label1 (result i32)
         i32.const 1
-        local.set $l0
-        local.get $l0
+        local.set $#local0
+        local.get $#local0
       end
-      block $B2 (result i32)
+      block $#label1 (result i32)
         i32.const 2
-        local.set $l0
-        local.get $l0
+        local.set $#local0
+        local.get $#local0
       end
-      br_if $B0
+      br_if $#label0
       drop
       i32.const 0
     end
     i32.const 0
     i32.add
     drop
-    local.get $l0)
-  (func $br (type $t0) (result i32)
-    block $B0 (result i32)
+    local.get $#local0
+  )
+  (func $#func15 (;15;) (type $#type0) (result i32)
+    block $#label0 (result i32)
       i32.const 1
-      if $I1
-        block $B2 (result i32)
+      if $#label1
+        block $#label2 (result i32)
           i32.const 1
-          br $B2
+          br $#label2
         end
-        br $B0
+        br $#label0
       else
-        block $B3
-          block $B4 (result i32)
+        block $#label2
+          block $#label3 (result i32)
             i32.const 1
-            br $B4
+            br $#label3
           end
           drop
         end
       end
       i32.const 1
-    end)
-  (func $shadowing (type $t0) (result i32)
-    block $B0 (result i32)
+    end
+  )
+  (func $#func16 (;16;) (type $#type0) (result i32)
+    block $#label0 (result i32)
       i32.const 1
-      br $B0
+      br $#label0
       i32.const 2
       i32.xor
-    end)
-  (func $redefinition (type $t0) (result i32)
-    block $B0 (result i32)
-      block $B1 (result i32)
+    end
+  )
+  (func $#func17 (;17;) (type $#type0) (result i32)
+    block $#label0 (result i32)
+      block $#label1 (result i32)
         i32.const 2
       end
-      block $B2 (result i32)
+      block $#label1 (result i32)
         i32.const 3
-        br $B2
+        br $#label1
       end
       i32.add
-    end)
-  (export "block" (func $block))
-  (export "loop1" (func $loop1))
-  (export "loop2" (func $loop2))
-  (export "loop3" (func $loop3))
-  (export "loop4" (func $loop4))
-  (export "loop5" (func $loop5))
-  (export "loop6" (func $loop6))
-  (export "if" (func $if))
-  (export "if2" (func $if2))
-  (export "switch" (func $switch))
-  (export "return" (func $return))
-  (export "br_if0" (func $br_if0))
-  (export "br_if1" (func $br_if1))
-  (export "br_if2" (func $br_if2))
-  (export "br_if3" (func $br_if3))
-  (export "br" (func $br))
-  (export "shadowing" (func $shadowing))
-  (export "redefinition" (func $redefinition)))
+    end
+  )
+)

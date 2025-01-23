@@ -1,3 +1,4 @@
 (module
-  (import "spectest" "table" (table $spectest.table 0 funcref))
-  (table $T1 0 funcref))
+  (import "spectest" "table" (table $#table0 (;0;) 0 funcref))
+  (table $#table1 (;1;) 0 funcref)
+)

@@ -1,224 +1,226 @@
 (module
-  (type $t0 (func))
-  (type $t1 (func (result i32)))
-  (type $t2 (func (param i32)))
-  (func $f0 (type $t0)
-    block $B0
+  (type $#type0 (;0;) (func))
+  (type $#type1 (;1;) (func (result i32)))
+  (type $#type2 (;2;) (func (param i32)))
+  (table $#table0 (;0;) 1 funcref)
+  (func $#func0 (;0;) (type $#type0)
+    block $#label0
       i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
     end
-    loop $L1
+    loop $#label0
       i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    i32.const 0
-    if $I2
-      i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
     end
     i32.const 0
-    if $I3
+    if $#label0
       i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
+    end
+    i32.const 0
+    if $#label0
+      i32.const 0
+      call_indirect (type $#type0)
     else
       i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
     end
-    block $B4
+    block $#label0
       i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
     end
-    loop $L5
+    loop $#label0
       i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    i32.const 0
-    if $I6
-      i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
     end
     i32.const 0
-    if $I7
+    if $#label0
       i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
+    end
+    i32.const 0
+    if $#label0
+      i32.const 0
+      call_indirect (type $#type0)
     else
       i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
     end
-    block $B8
+    block $#label0
       i32.const 0
       i32.const 0
-      call_indirect $T0 (type $t2)
+      call_indirect (type $#type2)
     end
-    loop $L9
+    loop $#label0
       i32.const 0
       i32.const 0
-      call_indirect $T0 (type $t2)
-    end
-    i32.const 0
-    if $I10
-      i32.const 0
-      i32.const 0
-      call_indirect $T0 (type $t2)
+      call_indirect (type $#type2)
     end
     i32.const 0
-    if $I11
+    if $#label0
       i32.const 0
       i32.const 0
-      call_indirect $T0 (type $t2)
+      call_indirect (type $#type2)
+    end
+    i32.const 0
+    if $#label0
+      i32.const 0
+      i32.const 0
+      call_indirect (type $#type2)
     else
       i32.const 0
       i32.const 0
-      call_indirect $T0 (type $t2)
+      call_indirect (type $#type2)
     end
-    block $B12 (result i32)
+    block $#label0 (result i32)
       i32.const 0
-      call_indirect $T0 (type $t1)
+      call_indirect (type $#type1)
     end
     drop
-    loop $L13 (result i32)
+    loop $#label0 (result i32)
       i32.const 0
-      call_indirect $T0 (type $t1)
-    end
-    drop
-    i32.const 0
-    if $I14 (result i32)
-      i32.const 0
-      call_indirect $T0 (type $t1)
-    else
-      i32.const 0
-      call_indirect $T0 (type $t1)
-    end
-    drop
-    block $B15
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    loop $L16
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    i32.const 0
-    if $I17
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    i32.const 0
-    if $I18
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    else
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    block $B19
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    loop $L20
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    i32.const 0
-    if $I21
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    i32.const 0
-    if $I22
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    else
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    block $B23
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    loop $L24
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    i32.const 0
-    if $I25
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    i32.const 0
-    if $I26
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    else
-      i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    block $B27
-      i32.const 0
-      i32.const 0
-      call_indirect $T0 (type $t2)
-    end
-    loop $L28
-      i32.const 0
-      i32.const 0
-      call_indirect $T0 (type $t2)
-    end
-    i32.const 0
-    if $I29
-      i32.const 0
-      i32.const 0
-      call_indirect $T0 (type $t2)
-    end
-    i32.const 0
-    if $I30
-      i32.const 0
-      i32.const 0
-      call_indirect $T0 (type $t2)
-    else
-      i32.const 0
-      i32.const 0
-      call_indirect $T0 (type $t2)
-    end
-    block $B31 (result i32)
-      i32.const 0
-      call_indirect $T0 (type $t1)
-    end
-    drop
-    loop $L32 (result i32)
-      i32.const 0
-      call_indirect $T0 (type $t1)
+      call_indirect (type $#type1)
     end
     drop
     i32.const 0
-    if $I33 (result i32)
+    if $#label0 (result i32)
       i32.const 0
-      call_indirect $T0 (type $t1)
+      call_indirect (type $#type1)
     else
       i32.const 0
-      call_indirect $T0 (type $t1)
+      call_indirect (type $#type1)
     end
     drop
-    block $B34
+    block $#label0
       i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
     end
-    loop $L35
+    loop $#label0
       i32.const 0
-      call_indirect $T0 (type $t0)
-    end
-    i32.const 0
-    if $I36
-      i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
     end
     i32.const 0
-    if $I37
+    if $#label0
       i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
+    end
+    i32.const 0
+    if $#label0
+      i32.const 0
+      call_indirect (type $#type0)
     else
       i32.const 0
-      call_indirect $T0 (type $t0)
+      call_indirect (type $#type0)
+    end
+    block $#label0
+      i32.const 0
+      call_indirect (type $#type0)
+    end
+    loop $#label0
+      i32.const 0
+      call_indirect (type $#type0)
     end
     i32.const 0
-    call_indirect $T0 (type $t0))
-  (table $T0 1 funcref))
+    if $#label0
+      i32.const 0
+      call_indirect (type $#type0)
+    end
+    i32.const 0
+    if $#label0
+      i32.const 0
+      call_indirect (type $#type0)
+    else
+      i32.const 0
+      call_indirect (type $#type0)
+    end
+    block $#label0
+      i32.const 0
+      call_indirect (type $#type0)
+    end
+    loop $#label0
+      i32.const 0
+      call_indirect (type $#type0)
+    end
+    i32.const 0
+    if $#label0
+      i32.const 0
+      call_indirect (type $#type0)
+    end
+    i32.const 0
+    if $#label0
+      i32.const 0
+      call_indirect (type $#type0)
+    else
+      i32.const 0
+      call_indirect (type $#type0)
+    end
+    block $#label0
+      i32.const 0
+      i32.const 0
+      call_indirect (type $#type2)
+    end
+    loop $#label0
+      i32.const 0
+      i32.const 0
+      call_indirect (type $#type2)
+    end
+    i32.const 0
+    if $#label0
+      i32.const 0
+      i32.const 0
+      call_indirect (type $#type2)
+    end
+    i32.const 0
+    if $#label0
+      i32.const 0
+      i32.const 0
+      call_indirect (type $#type2)
+    else
+      i32.const 0
+      i32.const 0
+      call_indirect (type $#type2)
+    end
+    block $#label0 (result i32)
+      i32.const 0
+      call_indirect (type $#type1)
+    end
+    drop
+    loop $#label0 (result i32)
+      i32.const 0
+      call_indirect (type $#type1)
+    end
+    drop
+    i32.const 0
+    if $#label0 (result i32)
+      i32.const 0
+      call_indirect (type $#type1)
+    else
+      i32.const 0
+      call_indirect (type $#type1)
+    end
+    drop
+    block $#label0
+      i32.const 0
+      call_indirect (type $#type0)
+    end
+    loop $#label0
+      i32.const 0
+      call_indirect (type $#type0)
+    end
+    i32.const 0
+    if $#label0
+      i32.const 0
+      call_indirect (type $#type0)
+    end
+    i32.const 0
+    if $#label0
+      i32.const 0
+      call_indirect (type $#type0)
+    else
+      i32.const 0
+      call_indirect (type $#type0)
+    end
+    i32.const 0
+    call_indirect (type $#type0)
+  )
+)

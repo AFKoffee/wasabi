@@ -1,23 +1,25 @@
 (module
-  (type $t0 (func))
-  (func $f0 (type $t0))
-  (func $f (type $t0))
-  (func $f2 (type $t0))
-  (func $f3 (type $t0))
-  (func $f4 (type $t0))
-  (func $f5 (type $t0))
-  (func $f6 (type $t0)
-    ref.func $f0
-    ref.func $f
-    ref.func $f2
-    ref.func $f3
-    ref.func $f4
-    ref.func $f5
-    return)
-  (table $T0 1 funcref)
-  (global $g0 funcref (ref.func $f0))
-  (export "f" (func $f))
-  (elem $e0 (i32.const 0) func $f2)
-  (elem $e1 (i32.const 0) func $f3)
-  (elem $e2 func $f4)
-  (elem $e3 func $f5))
+  (type $#type0 (;0;) (func))
+  (table $#table0 (;0;) 1 funcref)
+  (global $#global0 (;0;) funcref ref.func $#func0)
+  (export "f" (func $#func1))
+  (elem $#elem0 (;0;) (i32.const 0) func $#func2)
+  (elem $#elem1 (;1;) (i32.const 0) func $#func3)
+  (elem $#elem2 (;2;) func $#func4)
+  (elem $#elem3 (;3;) func $#func5)
+  (func $#func0 (;0;) (type $#type0))
+  (func $#func1 (;1;) (type $#type0))
+  (func $#func2 (;2;) (type $#type0))
+  (func $#func3 (;3;) (type $#type0))
+  (func $#func4 (;4;) (type $#type0))
+  (func $#func5 (;5;) (type $#type0))
+  (func $#func6 (;6;) (type $#type0)
+    ref.func $#func0
+    ref.func $#func1
+    ref.func $#func2
+    ref.func $#func3
+    ref.func $#func4
+    ref.func $#func5
+    return
+  )
+)

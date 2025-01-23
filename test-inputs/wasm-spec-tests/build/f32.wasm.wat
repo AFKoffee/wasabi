@@ -1,53 +1,65 @@
 (module
-  (type $t0 (func (param f32 f32) (result f32)))
-  (type $t1 (func (param f32) (result f32)))
-  (func $add (type $t0) (param $p0 f32) (param $p1 f32) (result f32)
-    local.get $p0
-    local.get $p1
-    f32.add)
-  (func $sub (type $t0) (param $p0 f32) (param $p1 f32) (result f32)
-    local.get $p0
-    local.get $p1
-    f32.sub)
-  (func $mul (type $t0) (param $p0 f32) (param $p1 f32) (result f32)
-    local.get $p0
-    local.get $p1
-    f32.mul)
-  (func $div (type $t0) (param $p0 f32) (param $p1 f32) (result f32)
-    local.get $p0
-    local.get $p1
-    f32.div)
-  (func $sqrt (type $t1) (param $p0 f32) (result f32)
-    local.get $p0
-    f32.sqrt)
-  (func $min (type $t0) (param $p0 f32) (param $p1 f32) (result f32)
-    local.get $p0
-    local.get $p1
-    f32.min)
-  (func $max (type $t0) (param $p0 f32) (param $p1 f32) (result f32)
-    local.get $p0
-    local.get $p1
-    f32.max)
-  (func $ceil (type $t1) (param $p0 f32) (result f32)
-    local.get $p0
-    f32.ceil)
-  (func $floor (type $t1) (param $p0 f32) (result f32)
-    local.get $p0
-    f32.floor)
-  (func $trunc (type $t1) (param $p0 f32) (result f32)
-    local.get $p0
-    f32.trunc)
-  (func $nearest (type $t1) (param $p0 f32) (result f32)
-    local.get $p0
-    f32.nearest)
-  (export "add" (func $add))
-  (export "sub" (func $sub))
-  (export "mul" (func $mul))
-  (export "div" (func $div))
-  (export "sqrt" (func $sqrt))
-  (export "min" (func $min))
-  (export "max" (func $max))
-  (export "ceil" (func $ceil))
-  (export "floor" (func $floor))
-  (export "trunc" (func $trunc))
-  (export "nearest" (func $nearest)))
+  (type $#type0 (;0;) (func (param f32 f32) (result f32)))
+  (type $#type1 (;1;) (func (param f32) (result f32)))
+  (export "add" (func $#func0))
+  (export "sub" (func $#func1))
+  (export "mul" (func $#func2))
+  (export "div" (func $#func3))
+  (export "sqrt" (func $#func4))
+  (export "min" (func $#func5))
+  (export "max" (func $#func6))
+  (export "ceil" (func $#func7))
+  (export "floor" (func $#func8))
+  (export "trunc" (func $#func9))
+  (export "nearest" (func $#func10))
+  (func $#func0 (;0;) (type $#type0) (param $#local0 f32) (param $#local1 f32) (result f32)
+    local.get $#local0
+    local.get $#local1
+    f32.add
+  )
+  (func $#func1 (;1;) (type $#type0) (param $#local0 f32) (param $#local1 f32) (result f32)
+    local.get $#local0
+    local.get $#local1
+    f32.sub
+  )
+  (func $#func2 (;2;) (type $#type0) (param $#local0 f32) (param $#local1 f32) (result f32)
+    local.get $#local0
+    local.get $#local1
+    f32.mul
+  )
+  (func $#func3 (;3;) (type $#type0) (param $#local0 f32) (param $#local1 f32) (result f32)
+    local.get $#local0
+    local.get $#local1
+    f32.div
+  )
+  (func $#func4 (;4;) (type $#type1) (param $#local0 f32) (result f32)
+    local.get $#local0
+    f32.sqrt
+  )
+  (func $#func5 (;5;) (type $#type0) (param $#local0 f32) (param $#local1 f32) (result f32)
+    local.get $#local0
+    local.get $#local1
+    f32.min
+  )
+  (func $#func6 (;6;) (type $#type0) (param $#local0 f32) (param $#local1 f32) (result f32)
+    local.get $#local0
+    local.get $#local1
+    f32.max
+  )
+  (func $#func7 (;7;) (type $#type1) (param $#local0 f32) (result f32)
+    local.get $#local0
+    f32.ceil
+  )
+  (func $#func8 (;8;) (type $#type1) (param $#local0 f32) (result f32)
+    local.get $#local0
+    f32.floor
+  )
+  (func $#func9 (;9;) (type $#type1) (param $#local0 f32) (result f32)
+    local.get $#local0
+    f32.trunc
+  )
+  (func $#func10 (;10;) (type $#type1) (param $#local0 f32) (result f32)
+    local.get $#local0
+    f32.nearest
+  )
+)

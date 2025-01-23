@@ -1,631 +1,725 @@
 (module
-  (type $t0 (func (param i32 i32) (result i32)))
-  (type $t1 (func))
-  (type $t2 (func (result i32)))
-  (type $t3 (func (param i32)))
-  (type $t4 (func (param i32 f64 i32) (result i32 f64 i32)))
-  (type $t5 (func (param i32) (result i32)))
-  (type $t6 (func (param i32) (result i32 i32)))
-  (type $t7 (func (result i32 i64 i32)))
-  (type $t8 (func (result i32 i32)))
-  (type $t9 (func (result f32 f32)))
-  (type $t10 (func (param i32) (result i32 i32 i64)))
-  (type $t11 (func (result i32 i32 i64)))
-  (type $t12 (func (param i32 i32) (result i32 i32)))
-  (type $t13 (func (param i64 i64 i32) (result i64 i32)))
-  (type $t14 (func (param i64 i64) (result i64)))
-  (type $t15 (func (param i64) (result i64)))
-  (func $f0 (type $t1))
-  (func $empty (type $t3) (param $p0 i32)
-    local.get $p0
-    if $I0
+  (type $#type0 (;0;) (func (param i32 i32) (result i32)))
+  (type $#type1 (;1;) (func))
+  (type $#type2 (;2;) (func (result i32)))
+  (type $#type3 (;3;) (func (param i32)))
+  (type $#type4 (;4;) (func (param i32 f64 i32) (result i32 f64 i32)))
+  (type $#type5 (;5;) (func (param i32) (result i32)))
+  (type $#type6 (;6;) (func (param i32) (result i32 i32)))
+  (type $#type7 (;7;) (func (result i32 i64 i32)))
+  (type $#type8 (;8;) (func (result i32 i32)))
+  (type $#type9 (;9;) (func (result f32 f32)))
+  (type $#type10 (;10;) (func (param i32) (result i32 i32 i64)))
+  (type $#type11 (;11;) (func (result i32 i32 i64)))
+  (type $#type12 (;12;) (func (param i32 i32) (result i32 i32)))
+  (type $#type13 (;13;) (func (param i64 i64 i32) (result i64 i32)))
+  (type $#type14 (;14;) (func (param i64 i64) (result i64)))
+  (type $#type15 (;15;) (func (param i64) (result i64)))
+  (table $#table0 (;0;) 1 1 funcref)
+  (memory $#memory0 (;0;) 1)
+  (global $#global0 (;0;) (mut i32) i32.const 10)
+  (export "empty" (func $#func1))
+  (export "singular" (func $#func2))
+  (export "multi" (func $#func3))
+  (export "nested" (func $#func4))
+  (export "as-select-first" (func $#func5))
+  (export "as-select-mid" (func $#func6))
+  (export "as-select-last" (func $#func7))
+  (export "as-loop-first" (func $#func8))
+  (export "as-loop-mid" (func $#func9))
+  (export "as-loop-last" (func $#func10))
+  (export "as-if-condition" (func $#func11))
+  (export "as-br_if-first" (func $#func12))
+  (export "as-br_if-last" (func $#func13))
+  (export "as-br_table-first" (func $#func14))
+  (export "as-br_table-last" (func $#func15))
+  (export "as-call_indirect-first" (func $#func17))
+  (export "as-call_indirect-mid" (func $#func18))
+  (export "as-call_indirect-last" (func $#func19))
+  (export "as-store-first" (func $#func20))
+  (export "as-store-last" (func $#func21))
+  (export "as-memory.grow-value" (func $#func22))
+  (export "as-call-value" (func $#func24))
+  (export "as-return-value" (func $#func25))
+  (export "as-drop-operand" (func $#func26))
+  (export "as-br-value" (func $#func27))
+  (export "as-local.set-value" (func $#func28))
+  (export "as-local.tee-value" (func $#func29))
+  (export "as-global.set-value" (func $#func30))
+  (export "as-load-operand" (func $#func31))
+  (export "as-unary-operand" (func $#func32))
+  (export "as-binary-operand" (func $#func33))
+  (export "as-test-operand" (func $#func34))
+  (export "as-compare-operand" (func $#func35))
+  (export "as-binary-operands" (func $#func36))
+  (export "as-compare-operands" (func $#func37))
+  (export "as-mixed-operands" (func $#func38))
+  (export "break-bare" (func $#func39))
+  (export "break-value" (func $#func40))
+  (export "break-multi-value" (func $#func41))
+  (export "param" (func $#func42))
+  (export "params" (func $#func43))
+  (export "params-id" (func $#func44))
+  (export "param-break" (func $#func45))
+  (export "params-break" (func $#func46))
+  (export "params-id-break" (func $#func47))
+  (export "effects" (func $#func48))
+  (export "add64_u_with_carry" (func $#func49))
+  (export "add64_u_saturated" (func $#func50))
+  (export "type-use" (func $#func51))
+  (export "atypical-condition" (func $#func52))
+  (elem $#elem0 (;0;) (i32.const 0) func $#func16)
+  (func $#func0 (;0;) (type $#type1))
+  (func $#func1 (;1;) (type $#type3) (param $#local0 i32)
+    local.get $#local0
+    if $#label0
     end
-    local.get $p0
-    if $I1
+    local.get $#local0
+    if $#label0
     end
-    local.get $p0
-    if $I2
+    local.get $#local0
+    if $#label0
     end
-    local.get $p0
-    if $I3
-    end)
-  (func $singular (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0
+    local.get $#local0
+    if $#label0
+    end
+  )
+  (func $#func2 (;2;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0
       nop
     end
-    local.get $p0
-    if $I1
+    local.get $#local0
+    if $#label0
       nop
     else
       nop
     end
-    local.get $p0
-    if $I2 (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
       i32.const 7
     else
       i32.const 8
-    end)
-  (func $multi (type $t6) (param $p0 i32) (result i32 i32)
-    local.get $p0
-    if $I0
-      call $f0
-      call $f0
-      call $f0
     end
-    local.get $p0
-    if $I1
+  )
+  (func $#func3 (;3;) (type $#type6) (param $#local0 i32) (result i32 i32)
+    local.get $#local0
+    if $#label0
+      call $#func0
+      call $#func0
+      call $#func0
+    end
+    local.get $#local0
+    if $#label0
     else
-      call $f0
-      call $f0
-      call $f0
+      call $#func0
+      call $#func0
+      call $#func0
     end
-    local.get $p0
-    if $I2 (result i32)
-      call $f0
-      call $f0
+    local.get $#local0
+    if $#label0 (result i32)
+      call $#func0
+      call $#func0
       i32.const 8
-      call $f0
+      call $#func0
     else
-      call $f0
-      call $f0
+      call $#func0
+      call $#func0
       i32.const 9
-      call $f0
+      call $#func0
     end
-    local.get $p0
-    if $I3 (result i32 i64 i32)
-      call $f0
-      call $f0
+    local.get $#local0
+    if $#label0 (type $#type7) (result i32 i64 i32)
+      call $#func0
+      call $#func0
       i32.const 1
-      call $f0
-      call $f0
-      call $f0
+      call $#func0
+      call $#func0
+      call $#func0
       i64.const 2
-      call $f0
-      call $f0
-      call $f0
+      call $#func0
+      call $#func0
+      call $#func0
       i32.const 3
-      call $f0
+      call $#func0
     else
-      call $f0
-      call $f0
+      call $#func0
+      call $#func0
       i32.const -1
-      call $f0
-      call $f0
-      call $f0
+      call $#func0
+      call $#func0
+      call $#func0
       i64.const -2
-      call $f0
-      call $f0
-      call $f0
+      call $#func0
+      call $#func0
+      call $#func0
       i32.const -3
-      call $f0
+      call $#func0
     end
     drop
-    drop)
-  (func $nested (type $t0) (param $p0 i32) (param $p1 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
-      local.get $p1
-      if $I1
-        call $f0
-        block $B2
+    drop
+  )
+  (func $#func4 (;4;) (type $#type0) (param $#local0 i32) (param $#local1 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
+      local.get $#local1
+      if $#label1
+        call $#func0
+        block $#label2
         end
         nop
       end
-      local.get $p1
-      if $I3
+      local.get $#local1
+      if $#label1
       else
-        call $f0
-        block $B4
+        call $#func0
+        block $#label2
         end
         nop
       end
-      local.get $p1
-      if $I5 (result i32)
-        call $f0
+      local.get $#local1
+      if $#label1 (result i32)
+        call $#func0
         i32.const 9
       else
-        call $f0
+        call $#func0
         i32.const 10
       end
     else
-      local.get $p1
-      if $I6
-        call $f0
-        block $B7
+      local.get $#local1
+      if $#label1
+        call $#func0
+        block $#label2
         end
         nop
       end
-      local.get $p1
-      if $I8
+      local.get $#local1
+      if $#label1
       else
-        call $f0
-        block $B9
+        call $#func0
+        block $#label2
         end
         nop
       end
-      local.get $p1
-      if $I10 (result i32)
-        call $f0
+      local.get $#local1
+      if $#label1 (result i32)
+        call $#func0
         i32.const 10
       else
-        call $f0
+        call $#func0
         i32.const 11
       end
-    end)
-  (func $as-select-first (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
-      call $f0
+    end
+  )
+  (func $#func5 (;5;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
+      call $#func0
       i32.const 1
     else
-      call $f0
+      call $#func0
       i32.const 0
     end
     i32.const 2
     i32.const 3
-    select)
-  (func $as-select-mid (type $t5) (param $p0 i32) (result i32)
+    select
+  )
+  (func $#func6 (;6;) (type $#type5) (param $#local0 i32) (result i32)
     i32.const 2
-    local.get $p0
-    if $I0 (result i32)
-      call $f0
+    local.get $#local0
+    if $#label0 (result i32)
+      call $#func0
       i32.const 1
     else
-      call $f0
+      call $#func0
       i32.const 0
     end
     i32.const 3
-    select)
-  (func $as-select-last (type $t5) (param $p0 i32) (result i32)
+    select
+  )
+  (func $#func7 (;7;) (type $#type5) (param $#local0 i32) (result i32)
     i32.const 2
     i32.const 3
-    local.get $p0
-    if $I0 (result i32)
-      call $f0
+    local.get $#local0
+    if $#label0 (result i32)
+      call $#func0
       i32.const 1
     else
-      call $f0
+      call $#func0
       i32.const 0
     end
-    select)
-  (func $as-loop-first (type $t5) (param $p0 i32) (result i32)
-    loop $L0 (result i32)
-      local.get $p0
-      if $I1 (result i32)
-        call $f0
+    select
+  )
+  (func $#func8 (;8;) (type $#type5) (param $#local0 i32) (result i32)
+    loop $#label0 (result i32)
+      local.get $#local0
+      if $#label1 (result i32)
+        call $#func0
         i32.const 1
       else
-        call $f0
+        call $#func0
         i32.const 0
       end
-      call $f0
-      call $f0
-    end)
-  (func $as-loop-mid (type $t5) (param $p0 i32) (result i32)
-    loop $L0 (result i32)
-      call $f0
-      local.get $p0
-      if $I1 (result i32)
-        call $f0
+      call $#func0
+      call $#func0
+    end
+  )
+  (func $#func9 (;9;) (type $#type5) (param $#local0 i32) (result i32)
+    loop $#label0 (result i32)
+      call $#func0
+      local.get $#local0
+      if $#label1 (result i32)
+        call $#func0
         i32.const 1
       else
-        call $f0
+        call $#func0
         i32.const 0
       end
-      call $f0
-    end)
-  (func $as-loop-last (type $t5) (param $p0 i32) (result i32)
-    loop $L0 (result i32)
-      call $f0
-      call $f0
-      local.get $p0
-      if $I1 (result i32)
-        call $f0
+      call $#func0
+    end
+  )
+  (func $#func10 (;10;) (type $#type5) (param $#local0 i32) (result i32)
+    loop $#label0 (result i32)
+      call $#func0
+      call $#func0
+      local.get $#local0
+      if $#label1 (result i32)
+        call $#func0
         i32.const 1
       else
-        call $f0
+        call $#func0
         i32.const 0
       end
-    end)
-  (func $as-if-condition (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
+    end
+  )
+  (func $#func11 (;11;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
       i32.const 1
     else
       i32.const 0
     end
-    if $I1 (result i32)
-      call $f0
+    if $#label0 (result i32)
+      call $#func0
       i32.const 2
     else
-      call $f0
+      call $#func0
       i32.const 3
-    end)
-  (func $as-br_if-first (type $t5) (param $p0 i32) (result i32)
-    block $B0 (result i32)
-      local.get $p0
-      if $I1 (result i32)
-        call $f0
+    end
+  )
+  (func $#func12 (;12;) (type $#type5) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
+      local.get $#local0
+      if $#label1 (result i32)
+        call $#func0
         i32.const 1
       else
-        call $f0
+        call $#func0
         i32.const 0
       end
       i32.const 2
-      br_if $B0
-      i32.const 3
-      return
-    end)
-  (func $as-br_if-last (type $t5) (param $p0 i32) (result i32)
-    block $B0 (result i32)
-      i32.const 2
-      local.get $p0
-      if $I1 (result i32)
-        call $f0
-        i32.const 1
-      else
-        call $f0
-        i32.const 0
-      end
-      br_if $B0
+      br_if $#label0
       i32.const 3
       return
-    end)
-  (func $as-br_table-first (type $t5) (param $p0 i32) (result i32)
-    block $B0 (result i32)
-      local.get $p0
-      if $I1 (result i32)
-        call $f0
+    end
+  )
+  (func $#func13 (;13;) (type $#type5) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
+      i32.const 2
+      local.get $#local0
+      if $#label1 (result i32)
+        call $#func0
         i32.const 1
       else
-        call $f0
+        call $#func0
+        i32.const 0
+      end
+      br_if $#label0
+      i32.const 3
+      return
+    end
+  )
+  (func $#func14 (;14;) (type $#type5) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
+      local.get $#local0
+      if $#label1 (result i32)
+        call $#func0
+        i32.const 1
+      else
+        call $#func0
         i32.const 0
       end
       i32.const 2
-      br_table $B0 $B0
-    end)
-  (func $as-br_table-last (type $t5) (param $p0 i32) (result i32)
-    block $B0 (result i32)
+      br_table $#label0 $#label0
+    end
+  )
+  (func $#func15 (;15;) (type $#type5) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
       i32.const 2
-      local.get $p0
-      if $I1 (result i32)
-        call $f0
+      local.get $#local0
+      if $#label1 (result i32)
+        call $#func0
         i32.const 1
       else
-        call $f0
+        call $#func0
         i32.const 0
       end
-      br_table $B0 $B0
-    end)
-  (func $f16 (type $t0) (param $p0 i32) (param $p1 i32) (result i32)
-    local.get $p0)
-  (func $as-call_indirect-first (type $t5) (param $p0 i32) (result i32)
-    block $B0 (result i32)
-      local.get $p0
-      if $I1 (result i32)
-        call $f0
+      br_table $#label0 $#label0
+    end
+  )
+  (func $#func16 (;16;) (type $#type0) (param $#local0 i32) (param $#local1 i32) (result i32)
+    local.get $#local0
+  )
+  (func $#func17 (;17;) (type $#type5) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
+      local.get $#local0
+      if $#label1 (result i32)
+        call $#func0
         i32.const 1
       else
-        call $f0
+        call $#func0
         i32.const 0
       end
       i32.const 2
       i32.const 0
-      call_indirect $T0 (type $t0)
-    end)
-  (func $as-call_indirect-mid (type $t5) (param $p0 i32) (result i32)
-    block $B0 (result i32)
+      call_indirect (type $#type0)
+    end
+  )
+  (func $#func18 (;18;) (type $#type5) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
       i32.const 2
-      local.get $p0
-      if $I1 (result i32)
-        call $f0
+      local.get $#local0
+      if $#label1 (result i32)
+        call $#func0
         i32.const 1
       else
-        call $f0
+        call $#func0
         i32.const 0
       end
       i32.const 0
-      call_indirect $T0 (type $t0)
-    end)
-  (func $as-call_indirect-last (type $t5) (param $p0 i32) (result i32)
-    block $B0 (result i32)
+      call_indirect (type $#type0)
+    end
+  )
+  (func $#func19 (;19;) (type $#type5) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
       i32.const 2
       i32.const 0
-      local.get $p0
-      if $I1 (result i32)
-        call $f0
+      local.get $#local0
+      if $#label1 (result i32)
+        call $#func0
         i32.const 1
       else
-        call $f0
+        call $#func0
         i32.const 0
       end
-      call_indirect $T0 (type $t0)
-    end)
-  (func $as-store-first (type $t3) (param $p0 i32)
-    local.get $p0
-    if $I0 (result i32)
-      call $f0
+      call_indirect (type $#type0)
+    end
+  )
+  (func $#func20 (;20;) (type $#type3) (param $#local0 i32)
+    local.get $#local0
+    if $#label0 (result i32)
+      call $#func0
       i32.const 1
     else
-      call $f0
+      call $#func0
       i32.const 0
     end
     i32.const 2
-    i32.store)
-  (func $as-store-last (type $t3) (param $p0 i32)
+    i32.store
+  )
+  (func $#func21 (;21;) (type $#type3) (param $#local0 i32)
     i32.const 2
-    local.get $p0
-    if $I0 (result i32)
-      call $f0
+    local.get $#local0
+    if $#label0 (result i32)
+      call $#func0
       i32.const 1
     else
-      call $f0
+      call $#func0
       i32.const 0
     end
-    i32.store)
-  (func $as-memory.grow-value (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
-      i32.const 1
-    else
-      i32.const 0
-    end
-    memory.grow)
-  (func $f23 (type $t5) (param $p0 i32) (result i32)
-    local.get $p0)
-  (func $as-call-value (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
+    i32.store
+  )
+  (func $#func22 (;22;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
       i32.const 1
     else
       i32.const 0
     end
-    call $f23)
-  (func $as-return-value (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
+    memory.grow
+  )
+  (func $#func23 (;23;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+  )
+  (func $#func24 (;24;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
       i32.const 1
     else
       i32.const 0
     end
-    return)
-  (func $as-drop-operand (type $t3) (param $p0 i32)
-    local.get $p0
-    if $I0 (result i32)
+    call $#func23
+  )
+  (func $#func25 (;25;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
       i32.const 1
     else
       i32.const 0
     end
-    drop)
-  (func $as-br-value (type $t5) (param $p0 i32) (result i32)
-    block $B0 (result i32)
-      local.get $p0
-      if $I1 (result i32)
+    return
+  )
+  (func $#func26 (;26;) (type $#type3) (param $#local0 i32)
+    local.get $#local0
+    if $#label0 (result i32)
+      i32.const 1
+    else
+      i32.const 0
+    end
+    drop
+  )
+  (func $#func27 (;27;) (type $#type5) (param $#local0 i32) (result i32)
+    block $#label0 (result i32)
+      local.get $#local0
+      if $#label1 (result i32)
         i32.const 1
       else
         i32.const 0
       end
-      br $B0
-    end)
-  (func $as-local.set-value (type $t5) (param $p0 i32) (result i32)
-    (local $l1 i32)
-    local.get $p0
-    if $I0 (result i32)
+      br $#label0
+    end
+  )
+  (func $#func28 (;28;) (type $#type5) (param $#local0 i32) (result i32)
+    (local $#local1 i32)
+    local.get $#local0
+    if $#label0 (result i32)
       i32.const 1
     else
       i32.const 0
     end
-    local.set $p0
-    local.get $p0)
-  (func $as-local.tee-value (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
+    local.set $#local0
+    local.get $#local0
+  )
+  (func $#func29 (;29;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
       i32.const 1
     else
       i32.const 0
     end
-    local.tee $p0)
-  (func $as-global.set-value (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
+    local.tee $#local0
+  )
+  (func $#func30 (;30;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
       i32.const 1
     else
       i32.const 0
     end
-    global.set $g0
-    global.get $g0)
-  (func $as-load-operand (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
+    global.set $#global0
+    global.get $#global0
+  )
+  (func $#func31 (;31;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
       i32.const 11
     else
       i32.const 10
     end
-    i32.load)
-  (func $as-unary-operand (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
-      call $f0
+    i32.load
+  )
+  (func $#func32 (;32;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
+      call $#func0
       i32.const 13
     else
-      call $f0
+      call $#func0
       i32.const -13
     end
-    i32.ctz)
-  (func $as-binary-operand (type $t0) (param $p0 i32) (param $p1 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
-      call $f0
+    i32.ctz
+  )
+  (func $#func33 (;33;) (type $#type0) (param $#local0 i32) (param $#local1 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
+      call $#func0
       i32.const 3
     else
-      call $f0
+      call $#func0
       i32.const -3
     end
-    local.get $p1
-    if $I1 (result i32)
-      call $f0
+    local.get $#local1
+    if $#label0 (result i32)
+      call $#func0
       i32.const 4
     else
-      call $f0
+      call $#func0
       i32.const -5
     end
-    i32.mul)
-  (func $as-test-operand (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
-      call $f0
+    i32.mul
+  )
+  (func $#func34 (;34;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
+      call $#func0
       i32.const 13
     else
-      call $f0
+      call $#func0
       i32.const 0
     end
-    i32.eqz)
-  (func $as-compare-operand (type $t0) (param $p0 i32) (param $p1 i32) (result i32)
-    local.get $p0
-    if $I0 (result f32)
-      call $f0
+    i32.eqz
+  )
+  (func $#func35 (;35;) (type $#type0) (param $#local0 i32) (param $#local1 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result f32)
+      call $#func0
       f32.const 0x1.8p+1 (;=3;)
     else
-      call $f0
+      call $#func0
       f32.const -0x1.8p+1 (;=-3;)
     end
-    local.get $p1
-    if $I1 (result f32)
-      call $f0
+    local.get $#local1
+    if $#label0 (result f32)
+      call $#func0
       f32.const 0x1p+2 (;=4;)
     else
-      call $f0
+      call $#func0
       f32.const -0x1p+2 (;=-4;)
     end
-    f32.gt)
-  (func $as-binary-operands (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32 i32)
-      call $f0
+    f32.gt
+  )
+  (func $#func36 (;36;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (type $#type8) (result i32 i32)
+      call $#func0
       i32.const 3
-      call $f0
+      call $#func0
       i32.const 4
     else
-      call $f0
+      call $#func0
       i32.const 3
-      call $f0
+      call $#func0
       i32.const -4
     end
-    i32.mul)
-  (func $as-compare-operands (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result f32 f32)
-      call $f0
+    i32.mul
+  )
+  (func $#func37 (;37;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (type $#type9) (result f32 f32)
+      call $#func0
       f32.const 0x1.8p+1 (;=3;)
-      call $f0
+      call $#func0
       f32.const 0x1.8p+1 (;=3;)
     else
-      call $f0
+      call $#func0
       f32.const -0x1p+1 (;=-2;)
-      call $f0
+      call $#func0
       f32.const -0x1.8p+1 (;=-3;)
     end
-    f32.gt)
-  (func $as-mixed-operands (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32 i32)
-      call $f0
+    f32.gt
+  )
+  (func $#func38 (;38;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (type $#type8) (result i32 i32)
+      call $#func0
       i32.const 3
-      call $f0
+      call $#func0
       i32.const 4
     else
-      call $f0
+      call $#func0
       i32.const -3
-      call $f0
+      call $#func0
       i32.const -4
     end
     i32.const 5
     i32.add
-    i32.mul)
-  (func $break-bare (type $t2) (result i32)
+    i32.mul
+  )
+  (func $#func39 (;39;) (type $#type2) (result i32)
     i32.const 1
-    if $I0
-      br $I0
+    if $#label0
+      br $#label0
       unreachable
     end
     i32.const 1
-    if $I1
-      br $I1
+    if $#label0
+      br $#label0
       unreachable
     else
       unreachable
     end
     i32.const 0
-    if $I2
+    if $#label0
       unreachable
     else
-      br $I2
+      br $#label0
       unreachable
     end
     i32.const 1
-    if $I3
+    if $#label0
       i32.const 1
-      br_if $I3
+      br_if $#label0
       unreachable
     end
     i32.const 1
-    if $I4
+    if $#label0
       i32.const 1
-      br_if $I4
+      br_if $#label0
       unreachable
     else
       unreachable
     end
     i32.const 0
-    if $I5
+    if $#label0
       unreachable
     else
       i32.const 1
-      br_if $I5
+      br_if $#label0
       unreachable
     end
     i32.const 1
-    if $I6
+    if $#label0
       i32.const 0
-      br_table $I6
+      br_table $#label0
       unreachable
     end
     i32.const 1
-    if $I7
+    if $#label0
       i32.const 0
-      br_table $I7
+      br_table $#label0
       unreachable
     else
       unreachable
     end
     i32.const 0
-    if $I8
+    if $#label0
       unreachable
     else
       i32.const 0
-      br_table $I8
+      br_table $#label0
       unreachable
     end
-    i32.const 19)
-  (func $break-value (type $t5) (param $p0 i32) (result i32)
-    local.get $p0
-    if $I0 (result i32)
+    i32.const 19
+  )
+  (func $#func40 (;40;) (type $#type5) (param $#local0 i32) (result i32)
+    local.get $#local0
+    if $#label0 (result i32)
       i32.const 18
-      br $I0
+      br $#label0
       i32.const 19
     else
       i32.const 21
-      br $I0
+      br $#label0
       i32.const 20
-    end)
-  (func $break-multi-value (type $t10) (param $p0 i32) (result i32 i32 i64)
-    local.get $p0
-    if $I0 (result i32 i32 i64)
+    end
+  )
+  (func $#func41 (;41;) (type $#type10) (param $#local0 i32) (result i32 i32 i64)
+    local.get $#local0
+    if $#label0 (type $#type11) (result i32 i32 i64)
       i32.const 18
       i32.const -18
       i64.const 18
-      br $I0
+      br $#label0
       i32.const 19
       i32.const -19
       i64.const 19
@@ -633,148 +727,158 @@
       i32.const -18
       i32.const 18
       i64.const -18
-      br $I0
+      br $#label0
       i32.const -19
       i32.const 19
       i64.const -19
-    end)
-  (func $param (type $t5) (param $p0 i32) (result i32)
+    end
+  )
+  (func $#func42 (;42;) (type $#type5) (param $#local0 i32) (result i32)
     i32.const 1
-    local.get $p0
-    if $I0 (param i32) (result i32)
+    local.get $#local0
+    if $#label0 (type $#type5) (param i32) (result i32)
       i32.const 2
       i32.add
     else
       i32.const -2
       i32.add
-    end)
-  (func $params (type $t5) (param $p0 i32) (result i32)
+    end
+  )
+  (func $#func43 (;43;) (type $#type5) (param $#local0 i32) (result i32)
     i32.const 1
     i32.const 2
-    local.get $p0
-    if $I0 (param i32 i32) (result i32)
+    local.get $#local0
+    if $#label0 (type $#type0) (param i32 i32) (result i32)
       i32.add
     else
       i32.sub
-    end)
-  (func $params-id (type $t5) (param $p0 i32) (result i32)
+    end
+  )
+  (func $#func44 (;44;) (type $#type5) (param $#local0 i32) (result i32)
     i32.const 1
     i32.const 2
-    local.get $p0
-    if $I0 (param i32 i32) (result i32 i32)
+    local.get $#local0
+    if $#label0 (type $#type12) (param i32 i32) (result i32 i32)
     end
-    i32.add)
-  (func $param-break (type $t5) (param $p0 i32) (result i32)
+    i32.add
+  )
+  (func $#func45 (;45;) (type $#type5) (param $#local0 i32) (result i32)
     i32.const 1
-    local.get $p0
-    if $I0 (param i32) (result i32)
+    local.get $#local0
+    if $#label0 (type $#type5) (param i32) (result i32)
       i32.const 2
       i32.add
-      br $I0
+      br $#label0
     else
       i32.const -2
       i32.add
-      br $I0
-    end)
-  (func $params-break (type $t5) (param $p0 i32) (result i32)
+      br $#label0
+    end
+  )
+  (func $#func46 (;46;) (type $#type5) (param $#local0 i32) (result i32)
     i32.const 1
     i32.const 2
-    local.get $p0
-    if $I0 (param i32 i32) (result i32)
+    local.get $#local0
+    if $#label0 (type $#type0) (param i32 i32) (result i32)
       i32.add
-      br $I0
+      br $#label0
     else
       i32.sub
-      br $I0
-    end)
-  (func $params-id-break (type $t5) (param $p0 i32) (result i32)
+      br $#label0
+    end
+  )
+  (func $#func47 (;47;) (type $#type5) (param $#local0 i32) (result i32)
     i32.const 1
     i32.const 2
-    local.get $p0
-    if $I0 (param i32 i32) (result i32 i32)
-      br $I0
+    local.get $#local0
+    if $#label0 (type $#type12) (param i32 i32) (result i32 i32)
+      br $#label0
     end
-    i32.add)
-  (func $effects (type $t5) (param $p0 i32) (result i32)
-    (local $l1 i32)
-    block $B0 (result i32)
+    i32.add
+  )
+  (func $#func48 (;48;) (type $#type5) (param $#local0 i32) (result i32)
+    (local $#local1 i32)
+    block $#label0 (result i32)
       i32.const 1
-      local.set $l1
-      local.get $p0
+      local.set $#local1
+      local.get $#local0
     end
-    if $I1
-      local.get $l1
+    if $#label0
+      local.get $#local1
       i32.const 3
       i32.mul
-      local.set $l1
-      local.get $l1
+      local.set $#local1
+      local.get $#local1
       i32.const 5
       i32.sub
-      local.set $l1
-      local.get $l1
+      local.set $#local1
+      local.get $#local1
       i32.const 7
       i32.mul
-      local.set $l1
-      br $I1
-      local.get $l1
+      local.set $#local1
+      br $#label0
+      local.get $#local1
       i32.const 100
       i32.mul
-      local.set $l1
+      local.set $#local1
     else
-      local.get $l1
+      local.get $#local1
       i32.const 5
       i32.mul
-      local.set $l1
-      local.get $l1
+      local.set $#local1
+      local.get $#local1
       i32.const 7
       i32.sub
-      local.set $l1
-      local.get $l1
+      local.set $#local1
+      local.get $#local1
       i32.const 3
       i32.mul
-      local.set $l1
-      br $I1
-      local.get $l1
+      local.set $#local1
+      br $#label0
+      local.get $#local1
       i32.const 1000
       i32.mul
-      local.set $l1
+      local.set $#local1
     end
-    local.get $l1)
-  (func $add64_u_with_carry (type $t13) (param $p0 i64) (param $p1 i64) (param $p2 i32) (result i64 i32)
-    (local $l3 i64)
-    local.get $p0
-    local.get $p1
+    local.get $#local1
+  )
+  (func $#func49 (;49;) (type $#type13) (param $#local0 i64) (param $#local1 i64) (param $#local2 i32) (result i64 i32)
+    (local $#local3 i64)
+    local.get $#local0
+    local.get $#local1
     i64.add
-    local.get $p2
+    local.get $#local2
     i64.extend_i32_u
     i64.add
-    local.set $l3
-    local.get $l3
-    local.get $l3
-    local.get $p0
+    local.set $#local3
+    local.get $#local3
+    local.get $#local3
+    local.get $#local0
     i64.lt_u
-    return)
-  (func $add64_u_saturated (type $t14) (param $p0 i64) (param $p1 i64) (result i64)
-    local.get $p0
-    local.get $p1
+    return
+  )
+  (func $#func50 (;50;) (type $#type14) (param $#local0 i64) (param $#local1 i64) (result i64)
+    local.get $#local0
+    local.get $#local1
     i32.const 0
-    call $add64_u_with_carry
-    if $I0 (param i64) (result i64)
+    call $#func49
+    if $#label0 (type $#type15) (param i64) (result i64)
       drop
       i64.const -1
-    end)
-  (func $type-use (type $t1)
+    end
+  )
+  (func $#func51 (;51;) (type $#type1)
     i32.const 1
-    if $I0
+    if $#label0 (type $#type1)
     end
     i32.const 1
-    if $I1 (result i32)
+    if $#label0 (type $#type2) (result i32)
       i32.const 0
     else
       i32.const 2
     end
     i32.const 1
-    if $I2 (param i32)
+    if $#label0 (type $#type3) (param i32)
       drop
     else
       drop
@@ -783,19 +887,19 @@
     f64.const 0x0p+0 (;=0;)
     i32.const 0
     i32.const 1
-    if $I3 (param i32 f64 i32) (result i32 f64 i32)
+    if $#label0 (type $#type4) (param i32 f64 i32) (result i32 f64 i32)
     end
     drop
     drop
     drop
     i32.const 1
-    if $I4 (result i32)
+    if $#label0 (type $#type2) (result i32)
       i32.const 0
     else
       i32.const 2
     end
     i32.const 1
-    if $I5 (param i32)
+    if $#label0 (type $#type3) (param i32)
       drop
     else
       drop
@@ -804,70 +908,19 @@
     f64.const 0x0p+0 (;=0;)
     i32.const 0
     i32.const 1
-    if $I6 (param i32 f64 i32) (result i32 f64 i32)
+    if $#label0 (type $#type4) (param i32 f64 i32) (result i32 f64 i32)
     end
     drop
     drop
-    drop)
-  (func $atypical-condition (type $t1)
+    drop
+  )
+  (func $#func52 (;52;) (type $#type1)
     i32.const 0
-    if $I0
+    if $#label0
     end
     i32.const 1
     i32.eqz
-    if $I1
-    end)
-  (table $T0 1 1 funcref)
-  (memory $M0 1)
-  (global $g0 (mut i32) (i32.const 10))
-  (export "empty" (func $empty))
-  (export "singular" (func $singular))
-  (export "multi" (func $multi))
-  (export "nested" (func $nested))
-  (export "as-select-first" (func $as-select-first))
-  (export "as-select-mid" (func $as-select-mid))
-  (export "as-select-last" (func $as-select-last))
-  (export "as-loop-first" (func $as-loop-first))
-  (export "as-loop-mid" (func $as-loop-mid))
-  (export "as-loop-last" (func $as-loop-last))
-  (export "as-if-condition" (func $as-if-condition))
-  (export "as-br_if-first" (func $as-br_if-first))
-  (export "as-br_if-last" (func $as-br_if-last))
-  (export "as-br_table-first" (func $as-br_table-first))
-  (export "as-br_table-last" (func $as-br_table-last))
-  (export "as-call_indirect-first" (func $as-call_indirect-first))
-  (export "as-call_indirect-mid" (func $as-call_indirect-mid))
-  (export "as-call_indirect-last" (func $as-call_indirect-last))
-  (export "as-store-first" (func $as-store-first))
-  (export "as-store-last" (func $as-store-last))
-  (export "as-memory.grow-value" (func $as-memory.grow-value))
-  (export "as-call-value" (func $as-call-value))
-  (export "as-return-value" (func $as-return-value))
-  (export "as-drop-operand" (func $as-drop-operand))
-  (export "as-br-value" (func $as-br-value))
-  (export "as-local.set-value" (func $as-local.set-value))
-  (export "as-local.tee-value" (func $as-local.tee-value))
-  (export "as-global.set-value" (func $as-global.set-value))
-  (export "as-load-operand" (func $as-load-operand))
-  (export "as-unary-operand" (func $as-unary-operand))
-  (export "as-binary-operand" (func $as-binary-operand))
-  (export "as-test-operand" (func $as-test-operand))
-  (export "as-compare-operand" (func $as-compare-operand))
-  (export "as-binary-operands" (func $as-binary-operands))
-  (export "as-compare-operands" (func $as-compare-operands))
-  (export "as-mixed-operands" (func $as-mixed-operands))
-  (export "break-bare" (func $break-bare))
-  (export "break-value" (func $break-value))
-  (export "break-multi-value" (func $break-multi-value))
-  (export "param" (func $param))
-  (export "params" (func $params))
-  (export "params-id" (func $params-id))
-  (export "param-break" (func $param-break))
-  (export "params-break" (func $params-break))
-  (export "params-id-break" (func $params-id-break))
-  (export "effects" (func $effects))
-  (export "add64_u_with_carry" (func $add64_u_with_carry))
-  (export "add64_u_saturated" (func $add64_u_saturated))
-  (export "type-use" (func $type-use))
-  (export "atypical-condition" (func $atypical-condition))
-  (elem $e0 (i32.const 0) func $f16))
+    if $#label0
+    end
+  )
+)

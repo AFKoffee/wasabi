@@ -1,75 +1,85 @@
 (module
-  (type $t0 (func))
-  (func $as-block-value (type $t0)
-    block $B0
+  (type $#type0 (;0;) (func))
+  (memory $#memory0 (;0;) 1)
+  (export "as-block-value" (func $#func0))
+  (export "as-loop-value" (func $#func1))
+  (export "as-br-value" (func $#func2))
+  (export "as-br_if-value" (func $#func3))
+  (export "as-br_if-value-cond" (func $#func4))
+  (export "as-br_table-value" (func $#func5))
+  (export "as-return-value" (func $#func6))
+  (export "as-if-then" (func $#func7))
+  (export "as-if-else" (func $#func8))
+  (func $#func0 (;0;) (type $#type0)
+    block $#label0
       i32.const 0
       i32.const 1
       i32.store
-    end)
-  (func $as-loop-value (type $t0)
-    loop $L0
+    end
+  )
+  (func $#func1 (;1;) (type $#type0)
+    loop $#label0
       i32.const 0
       i32.const 1
       i32.store
-    end)
-  (func $as-br-value (type $t0)
-    block $B0
+    end
+  )
+  (func $#func2 (;2;) (type $#type0)
+    block $#label0
       i32.const 0
       i32.const 1
       i32.store
-      br $B0
-    end)
-  (func $as-br_if-value (type $t0)
-    block $B0
+      br $#label0
+    end
+  )
+  (func $#func3 (;3;) (type $#type0)
+    block $#label0
       i32.const 0
       i32.const 1
       i32.store
       i32.const 1
-      br_if $B0
-    end)
-  (func $as-br_if-value-cond (type $t0)
-    block $B0
+      br_if $#label0
+    end
+  )
+  (func $#func4 (;4;) (type $#type0)
+    block $#label0
       i32.const 6
       i32.const 0
       i32.const 1
       i32.store
-      br_if $B0
-    end)
-  (func $as-br_table-value (type $t0)
-    block $B0
+      br_if $#label0
+    end
+  )
+  (func $#func5 (;5;) (type $#type0)
+    block $#label0
       i32.const 0
       i32.const 1
       i32.store
       i32.const 1
-      br_table $B0
-    end)
-  (func $as-return-value (type $t0)
+      br_table $#label0
+    end
+  )
+  (func $#func6 (;6;) (type $#type0)
     i32.const 0
     i32.const 1
     i32.store
-    return)
-  (func $as-if-then (type $t0)
+    return
+  )
+  (func $#func7 (;7;) (type $#type0)
     i32.const 1
-    if $I0
+    if $#label0
       i32.const 0
       i32.const 1
       i32.store
-    end)
-  (func $as-if-else (type $t0)
+    end
+  )
+  (func $#func8 (;8;) (type $#type0)
     i32.const 0
-    if $I0
+    if $#label0
     else
       i32.const 0
       i32.const 1
       i32.store
-    end)
-  (memory $M0 1)
-  (export "as-block-value" (func $as-block-value))
-  (export "as-loop-value" (func $as-loop-value))
-  (export "as-br-value" (func $as-br-value))
-  (export "as-br_if-value" (func $as-br_if-value))
-  (export "as-br_if-value-cond" (func $as-br_if-value-cond))
-  (export "as-br_table-value" (func $as-br_table-value))
-  (export "as-return-value" (func $as-return-value))
-  (export "as-if-then" (func $as-if-then))
-  (export "as-if-else" (func $as-if-else)))
+    end
+  )
+)

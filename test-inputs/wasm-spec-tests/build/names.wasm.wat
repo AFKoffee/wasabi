@@ -1,11 +1,13 @@
 (module
-  (type $t0 (func (param i32)))
-  (type $t1 (func (param i32 i32)))
-  (import "spectest" "print_i32" (func $spectest.print_i32 (type $t0)))
-  (import "spectest" "print_i32" (func $spectest.print_i32_1 (type $t0)))
-  (func $print32 (type $t1) (param $p0 i32) (param $p1 i32)
-    local.get $p0
-    call $spectest.print_i32
-    local.get $p1
-    call $spectest.print_i32_1)
-  (export "print32" (func $print32)))
+  (type $#type0 (;0;) (func (param i32)))
+  (type $#type1 (;1;) (func (param i32 i32)))
+  (import "spectest" "print_i32" (func $#func0 (;0;) (type $#type0)))
+  (import "spectest" "print_i32" (func $#func1 (;1;) (type $#type0)))
+  (export "print32" (func $#func2))
+  (func $#func2 (;2;) (type $#type1) (param $#local0 i32) (param $#local1 i32)
+    local.get $#local0
+    call $#func0
+    local.get $#local1
+    call $#func1
+  )
+)

@@ -1,6 +1,7 @@
 (module
-  (type $t0 (func))
-  (func $f0 (type $t0))
-  (func $f (type $t0))
-  (memory $M0 0)
-  (export "f" (func $f)))
+  (type $#type0 (;0;) (func))
+  (memory $#memory0 (;0;) 0)
+  (export "f" (func $#func1))
+  (func $#func0 (;0;) (type $#type0))
+  (func $#func1 (;1;) (type $#type0))
+)

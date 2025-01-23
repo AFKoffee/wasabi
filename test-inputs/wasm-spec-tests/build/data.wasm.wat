@@ -1,3 +1,4 @@
 (module
-  (import "spectest" "memory" (memory $spectest.memory 0 3))
-  (data $d0 (i32.const 1) "a"))
+  (import "spectest" "memory" (memory $#memory0 (;0;) 0 3))
+  (data $#data0 (;0;) (i32.const 1) "a")
+)

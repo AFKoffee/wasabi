@@ -1,17 +1,21 @@
 (module
-  (type $t0 (func (result i32)))
-  (func $f1 (type $t0) (result i32)
+  (type $#type0 (;0;) (func (result i32)))
+  (export "f1" (func $#func0))
+  (export "f2" (func $#func1))
+  (export "f3" (func $#func2))
+  (func $#func0 (;0;) (type $#type0) (result i32)
     i32.const 1
     i32.const 2
-    return)
-  (func $f2 (type $t0) (result i32)
+    return
+  )
+  (func $#func1 (;1;) (type $#type0) (result i32)
     i32.const 1
     i32.const 2
-    return)
-  (func $f3 (type $t0) (result i32)
+    return
+  )
+  (func $#func2 (;2;) (type $#type0) (result i32)
     i32.const 1
     i32.const 2
-    return)
-  (export "f1" (func $f1))
-  (export "f2" (func $f2))
-  (export "f3" (func $f3)))
+    return
+  )
+)

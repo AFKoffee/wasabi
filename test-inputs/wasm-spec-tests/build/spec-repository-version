@@ -1,5 +1,15 @@
-commit 12e754f800367ba9f89e09b214f2d4ff3d14a32e
-Author: Andreas Rossberg <rossberg@chromium.org>
-Date:   Fri Dec 13 19:06:37 2024 +0100
+commit f3a0e06235d2d84bb0f3b5014da4370613886965
+Author: Derek Schuff <dschuff@chromium.org>
+Date:   Thu Dec 19 16:17:16 2024 -0800
 
-    [spec] Change misleading wording in note (#1855)
+    Use WPT version of test harness for HTML core test conversion (#1859)
+    
+    When converting tests to HTML for use in WPT, use the path to
+    the test harness in WPT's resources/ directory. This is also
+    important because the WPT test runner users this path inclusion
+    to discover the tests.
+    
+    There are several more things I want to simplify here but I'm
+    starting with just this because it matches the sed transform
+    that @past originally wrote in
+    https://github.com/web-platform-tests/wpt/pull/49277
