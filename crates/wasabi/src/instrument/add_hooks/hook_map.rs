@@ -291,7 +291,7 @@ impl HookMap {
                 Hook::new(ll_name, args, "ref.is_null", js_args)
             }
 
-            RefFunc(_) | RefNull(_) | ElemDrop(_) | DataDrop(_) => todo!("instrumentation not supported!"),
+            RefFunc(_) | RefNull(_) | ElemDrop(_) | DataDrop(_) | Atomic(_, _) | AtomicFence => todo!("instrumentation not supported!"),
             }
         };
 

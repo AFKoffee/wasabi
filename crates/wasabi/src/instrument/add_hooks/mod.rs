@@ -922,17 +922,17 @@ pub fn add_hooks(
                 },
                 RefNull(ty) => {
                     type_stack.push_val(ValType::Ref(ty));
-                    instrumented_body.push(instr.clone());
+                    instrumented_body.push(instr);
                 },
                 RefFunc(_) => {
                     type_stack.push_val(ValType::Ref(RefType::FuncRef)); // TODO: Why not use instr.simple_type() here?
-                    instrumented_body.push(instr.clone());
+                    instrumented_body.push(instr);
                 },
-                ElemDrop(_) => {
-                    instrumented_body.push(instr.clone());
-                },
-                DataDrop(_) => {
-                    instrumented_body.push(instr.clone());
+                ElemDrop(_) |
+                DataDrop(_) |
+                Atomic(_, _) |
+                AtomicFence => {
+                    instrumented_body.push(instr);
                 }
             }
         }

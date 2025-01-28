@@ -1223,7 +1223,7 @@ fn parse_memory_ty(ty: wp::MemoryType, offset: usize) -> Result<MemoryType, Pars
                     .expect("guaranteed u32 by wasmparser if !memory64")
             }),
         },
-        shared: ty.shared
+        shared: ty.shared,
     })
 }
 

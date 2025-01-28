@@ -773,6 +773,205 @@ fn encode_instruction(
         }),
         Instr::RefIsNull => we::Instruction::RefIsNull,
         Instr::RefFunc(idx) => we::Instruction::RefFunc(state.map_function_idx(idx)?.to_u32()),
+        Instr::Atomic(AtomicOp::Notify(AtomicNotify::MemoryAtomicNotify), memarg) => {
+            we::Instruction::MemoryAtomicNotify(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Wait(AtomicWait::MemoryAtomicWait32), memarg) => {
+            we::Instruction::MemoryAtomicWait32(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Wait(AtomicWait::MemoryAtomicWait64), memarg) => {
+            we::Instruction::MemoryAtomicWait64(we::MemArg::from(memarg))
+        }
+        Instr::AtomicFence => we::Instruction::AtomicFence,
+        Instr::Atomic(AtomicOp::Load(AtomicLoad::I32AtomicLoad), memarg) => {
+            we::Instruction::I32AtomicLoad(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Load(AtomicLoad::I64AtomicLoad), memarg) => {
+            we::Instruction::I64AtomicLoad(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Load(AtomicLoad::I32AtomicLoad8U), memarg) => {
+            we::Instruction::I32AtomicLoad8U(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Load(AtomicLoad::I32AtomicLoad16U), memarg) => {
+            we::Instruction::I32AtomicLoad16U(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Load(AtomicLoad::I64AtomicLoad8U), memarg) => {
+            we::Instruction::I64AtomicLoad8U(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Load(AtomicLoad::I64AtomicLoad16U), memarg) => {
+            we::Instruction::I64AtomicLoad16U(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Load(AtomicLoad::I64AtomicLoad32U), memarg) => {
+            we::Instruction::I64AtomicLoad32U(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Store(AtomicStore::I32AtomicStore), memarg) => {
+            we::Instruction::I32AtomicStore(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Store(AtomicStore::I64AtomicStore), memarg) => {
+            we::Instruction::I64AtomicStore(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Store(AtomicStore::I32AtomicStore8), memarg) => {
+            we::Instruction::I32AtomicStore8(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Store(AtomicStore::I32AtomicStore16), memarg) => {
+            we::Instruction::I32AtomicStore16(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Store(AtomicStore::I64AtomicStore8), memarg) => {
+            we::Instruction::I64AtomicStore8(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Store(AtomicStore::I64AtomicStore16), memarg) => {
+            we::Instruction::I64AtomicStore16(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Store(AtomicStore::I64AtomicStore32), memarg) => {
+            we::Instruction::I64AtomicStore32(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmwAdd), memarg) => {
+            we::Instruction::I32AtomicRmwAdd(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmwAdd), memarg) => {
+            we::Instruction::I64AtomicRmwAdd(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8AddU), memarg) => {
+            we::Instruction::I32AtomicRmw8AddU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16AddU), memarg) => {
+            we::Instruction::I32AtomicRmw16AddU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8AddU), memarg) => {
+            we::Instruction::I64AtomicRmw8AddU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16AddU), memarg) => {
+            we::Instruction::I64AtomicRmw16AddU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32AddU), memarg) => {
+            we::Instruction::I64AtomicRmw32AddU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmwSub), memarg) => {
+            we::Instruction::I32AtomicRmwSub(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmwSub), memarg) => {
+            we::Instruction::I64AtomicRmwSub(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8SubU), memarg) => {
+            we::Instruction::I32AtomicRmw8SubU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16SubU), memarg) => {
+            we::Instruction::I32AtomicRmw16SubU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8SubU), memarg) => {
+            we::Instruction::I64AtomicRmw8SubU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16SubU), memarg) => {
+            we::Instruction::I64AtomicRmw16SubU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32SubU), memarg) => {
+            we::Instruction::I64AtomicRmw32SubU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmwAnd), memarg) => {
+            we::Instruction::I32AtomicRmwAnd(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmwAnd), memarg) => {
+            we::Instruction::I64AtomicRmwAnd(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8AndU), memarg) => {
+            we::Instruction::I32AtomicRmw8AndU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16AndU), memarg) => {
+            we::Instruction::I32AtomicRmw16AndU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8AndU), memarg) => {
+            we::Instruction::I64AtomicRmw8AndU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16AndU), memarg) => {
+            we::Instruction::I64AtomicRmw16AndU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32AndU), memarg) => {
+            we::Instruction::I64AtomicRmw32AndU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmwOr), memarg) => {
+            we::Instruction::I32AtomicRmwOr(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmwOr), memarg) => {
+            we::Instruction::I64AtomicRmwOr(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8OrU), memarg) => {
+            we::Instruction::I32AtomicRmw8OrU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16OrU), memarg) => {
+            we::Instruction::I32AtomicRmw16OrU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8OrU), memarg) => {
+            we::Instruction::I64AtomicRmw8OrU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16OrU), memarg) => {
+            we::Instruction::I64AtomicRmw16OrU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32OrU), memarg) => {
+            we::Instruction::I64AtomicRmw32OrU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmwXor), memarg) => {
+            we::Instruction::I32AtomicRmwXor(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmwXor), memarg) => {
+            we::Instruction::I64AtomicRmwXor(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8XorU), memarg) => {
+            we::Instruction::I32AtomicRmw8XorU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16XorU), memarg) => {
+            we::Instruction::I32AtomicRmw16XorU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8XorU), memarg) => {
+            we::Instruction::I64AtomicRmw8XorU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16XorU), memarg) => {
+            we::Instruction::I64AtomicRmw16XorU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32XorU), memarg) => {
+            we::Instruction::I64AtomicRmw32XorU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmwXchg), memarg) => {
+            we::Instruction::I32AtomicRmwXchg(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmwXchg), memarg) => {
+            we::Instruction::I64AtomicRmwXchg(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8XchgU), memarg) => {
+            we::Instruction::I32AtomicRmw8XchgU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16XchgU), memarg) => {
+            we::Instruction::I32AtomicRmw16XchgU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8XchgU), memarg) => {
+            we::Instruction::I64AtomicRmw8XchgU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16XchgU), memarg) => {
+            we::Instruction::I64AtomicRmw16XchgU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32XchgU), memarg) => {
+            we::Instruction::I64AtomicRmw32XchgU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Cmpxchg(AtomicCmpxchg::I32AtomicRmwCmpxchg), memarg) => {
+            we::Instruction::I32AtomicRmwCmpxchg(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Cmpxchg(AtomicCmpxchg::I64AtomicRmwCmpxchg), memarg) => {
+            we::Instruction::I64AtomicRmwCmpxchg(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Cmpxchg(AtomicCmpxchg::I32AtomicRmw8CmpxchgU), memarg) => {
+            we::Instruction::I32AtomicRmw8CmpxchgU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Cmpxchg(AtomicCmpxchg::I32AtomicRmw16CmpxchgU), memarg) => {
+            we::Instruction::I32AtomicRmw16CmpxchgU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Cmpxchg(AtomicCmpxchg::I64AtomicRmw8CmpxchgU), memarg) => {
+            we::Instruction::I64AtomicRmw8CmpxchgU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Cmpxchg(AtomicCmpxchg::I64AtomicRmw16CmpxchgU), memarg) => {
+            we::Instruction::I64AtomicRmw16CmpxchgU(we::MemArg::from(memarg))
+        }
+        Instr::Atomic(AtomicOp::Cmpxchg(AtomicCmpxchg::I64AtomicRmw32CmpxchgU), memarg) => {
+            we::Instruction::I64AtomicRmw32CmpxchgU(we::MemArg::from(memarg))
+        }
     })
 }
 

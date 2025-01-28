@@ -801,6 +801,9 @@ pub enum Instr {
     Const(Val),
     Unary(UnaryOp),
     Binary(BinaryOp),
+
+    Atomic(AtomicOp, Memarg),
+    AtomicFence,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
@@ -868,6 +871,455 @@ pub enum StoreOp {
     I64Store8,
     I64Store16,
     I64Store32,
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub enum AtomicLoad {
+    I32AtomicLoad,
+    I64AtomicLoad,
+    I32AtomicLoad8U,
+    I32AtomicLoad16U,
+    I64AtomicLoad8U,
+    I64AtomicLoad16U,
+    I64AtomicLoad32U,
+}
+
+impl MemoryOp for AtomicLoad {
+    fn to_name(self) -> &'static str {
+        match self {
+            AtomicLoad::I32AtomicLoad => "i32.atomic.load",
+            AtomicLoad::I64AtomicLoad => "i64.atomic.load",
+            AtomicLoad::I32AtomicLoad8U => "i32.atomic.load8_u",
+            AtomicLoad::I32AtomicLoad16U => "i32.atomic.load16_u",
+            AtomicLoad::I64AtomicLoad8U => "i64.atomic.load8_u",
+            AtomicLoad::I64AtomicLoad16U => "i64.atomic.load16_u",
+            AtomicLoad::I64AtomicLoad32U => "i64.atomic.load32_u",
+        }
+    }
+    
+    fn to_type(self) -> FunctionType {
+        use ValType::*;
+        match self {
+            AtomicLoad::I32AtomicLoad |
+            AtomicLoad::I32AtomicLoad8U |
+            AtomicLoad::I32AtomicLoad16U => FunctionType::new(&[I32], &[I32]),
+            AtomicLoad::I64AtomicLoad |
+            AtomicLoad::I64AtomicLoad8U |
+            AtomicLoad::I64AtomicLoad16U |
+            AtomicLoad::I64AtomicLoad32U => FunctionType::new(&[I32], &[I64]),
+        }
+    }
+    
+    fn natural_alignment_exp(self) -> u8 {
+        match self {
+            AtomicLoad::I32AtomicLoad => 2,
+            AtomicLoad::I64AtomicLoad => 3,
+            AtomicLoad::I32AtomicLoad8U => 0,
+            AtomicLoad::I32AtomicLoad16U => 1,
+            AtomicLoad::I64AtomicLoad8U => 0,
+            AtomicLoad::I64AtomicLoad16U => 1,
+            AtomicLoad::I64AtomicLoad32U => 2,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub enum AtomicStore {
+    I32AtomicStore,
+    I64AtomicStore,
+    I32AtomicStore8,
+    I32AtomicStore16,
+    I64AtomicStore8,
+    I64AtomicStore16,
+    I64AtomicStore32,
+}
+
+impl MemoryOp for AtomicStore {
+    fn to_name(self) -> &'static str {
+        match self {
+            AtomicStore::I32AtomicStore => "i32.atomic.store",
+            AtomicStore::I64AtomicStore => "i64.atomic.store",
+            AtomicStore::I32AtomicStore8 => "i32.atomic.store8",
+            AtomicStore::I32AtomicStore16 => "i32.atomic.store16",
+            AtomicStore::I64AtomicStore8 => "i64.atomic.store8",
+            AtomicStore::I64AtomicStore16 => "i64.atomic.store16",
+            AtomicStore::I64AtomicStore32 => "i64.atomic.store32",
+        }
+    }
+    
+    fn to_type(self) -> FunctionType {
+        use ValType::*;
+        match self {
+            AtomicStore::I32AtomicStore |
+            AtomicStore::I32AtomicStore8 |
+            AtomicStore::I32AtomicStore16 => FunctionType::new(&[I32, I32], &[]),
+            AtomicStore::I64AtomicStore |
+            AtomicStore::I64AtomicStore8 |
+            AtomicStore::I64AtomicStore16 |
+            AtomicStore::I64AtomicStore32 => FunctionType::new(&[I32, I64], &[]),
+        }
+    }
+    
+    fn natural_alignment_exp(self) -> u8 {
+        match self {
+            AtomicStore::I32AtomicStore => 2,
+            AtomicStore::I64AtomicStore => 3,
+            AtomicStore::I32AtomicStore8 => 0,
+            AtomicStore::I32AtomicStore16 => 1,
+            AtomicStore::I64AtomicStore8 => 0,
+            AtomicStore::I64AtomicStore16 => 1,
+            AtomicStore::I64AtomicStore32 => 2,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub enum AtomicRmw {
+    I32AtomicRmwAdd,
+    I64AtomicRmwAdd,
+    I32AtomicRmw8AddU,
+    I32AtomicRmw16AddU,
+    I64AtomicRmw8AddU,
+    I64AtomicRmw16AddU,
+    I64AtomicRmw32AddU,
+    I32AtomicRmwSub,
+    I64AtomicRmwSub,
+    I32AtomicRmw8SubU,
+    I32AtomicRmw16SubU,
+    I64AtomicRmw8SubU,
+    I64AtomicRmw16SubU,
+    I64AtomicRmw32SubU,
+    I32AtomicRmwAnd,
+    I64AtomicRmwAnd,
+    I32AtomicRmw8AndU,
+    I32AtomicRmw16AndU,
+    I64AtomicRmw8AndU,
+    I64AtomicRmw16AndU,
+    I64AtomicRmw32AndU,
+    I32AtomicRmwOr,
+    I64AtomicRmwOr,
+    I32AtomicRmw8OrU,
+    I32AtomicRmw16OrU,
+    I64AtomicRmw8OrU,
+    I64AtomicRmw16OrU,
+    I64AtomicRmw32OrU,
+    I32AtomicRmwXor,
+    I64AtomicRmwXor,
+    I32AtomicRmw8XorU,
+    I32AtomicRmw16XorU,
+    I64AtomicRmw8XorU,
+    I64AtomicRmw16XorU,
+    I64AtomicRmw32XorU,
+    I32AtomicRmwXchg,
+    I64AtomicRmwXchg,
+    I32AtomicRmw8XchgU,
+    I32AtomicRmw16XchgU,
+    I64AtomicRmw8XchgU,
+    I64AtomicRmw16XchgU,
+    I64AtomicRmw32XchgU,
+}
+
+impl MemoryOp for AtomicRmw {
+    fn to_name(self) -> &'static str {
+        match self {
+            AtomicRmw::I32AtomicRmwAdd => "i32.atomic.rmw.add",
+            AtomicRmw::I64AtomicRmwAdd => "i64.atomic.rmw.add",
+            AtomicRmw::I32AtomicRmw8AddU => "i32.atomic.rmw8.add_u",
+            AtomicRmw::I32AtomicRmw16AddU => "i32.atomic.rmw16.add_u",
+            AtomicRmw::I64AtomicRmw8AddU => "i64.atomic.rmw8.add_u",
+            AtomicRmw::I64AtomicRmw16AddU => "i64.atomic.rmw16.add_u",
+            AtomicRmw::I64AtomicRmw32AddU => "i64.atomic.rmw32.add_u",
+            AtomicRmw::I32AtomicRmwSub => "i32.atomic.rmw.sub",
+            AtomicRmw::I64AtomicRmwSub => "i64.atomic.rmw.sub",
+            AtomicRmw::I32AtomicRmw8SubU => "i32.atomic.rmw8.sub_u",
+            AtomicRmw::I32AtomicRmw16SubU => "i32.atomic.rmw16.sub_u",
+            AtomicRmw::I64AtomicRmw8SubU => "i64.atomic.rmw8.sub_u",
+            AtomicRmw::I64AtomicRmw16SubU => "i64.atomic.rmw16.sub_u",
+            AtomicRmw::I64AtomicRmw32SubU => "i64.atomic.rmw32.sub_u",
+            AtomicRmw::I32AtomicRmwAnd => "i32.atomic.rmw.and",
+            AtomicRmw::I64AtomicRmwAnd => "i64.atomic.rmw.and",
+            AtomicRmw::I32AtomicRmw8AndU => "i32.atomic.rmw8.and_u",
+            AtomicRmw::I32AtomicRmw16AndU => "i32.atomic.rmw16.and_u",
+            AtomicRmw::I64AtomicRmw8AndU => "i64.atomic.rmw8.and_u",
+            AtomicRmw::I64AtomicRmw16AndU => "i64.atomic.rmw16.and_u",
+            AtomicRmw::I64AtomicRmw32AndU => "i64.atomic.rmw32.and_u",
+            AtomicRmw::I32AtomicRmwOr => "i32.atomic.rmw.or",
+            AtomicRmw::I64AtomicRmwOr => "i64.atomic.rmw.or",
+            AtomicRmw::I32AtomicRmw8OrU => "i32.atomic.rmw8.or_u",
+            AtomicRmw::I32AtomicRmw16OrU => "i32.atomic.rmw16.or_u",
+            AtomicRmw::I64AtomicRmw8OrU => "i64.atomic.rmw8.or_u",
+            AtomicRmw::I64AtomicRmw16OrU => "i64.atomic.rmw16.or_u",
+            AtomicRmw::I64AtomicRmw32OrU => "i64.atomic.rmw32.or_u",
+            AtomicRmw::I32AtomicRmwXor => "i32.atomic.rmw.xor",
+            AtomicRmw::I64AtomicRmwXor => "i64.atomic.rmw.xor",
+            AtomicRmw::I32AtomicRmw8XorU => "i32.atomic.rmw8.xor_u",
+            AtomicRmw::I32AtomicRmw16XorU => "i32.atomic.rmw16.xor_u",
+            AtomicRmw::I64AtomicRmw8XorU => "i64.atomic.rmw8.xor_u",
+            AtomicRmw::I64AtomicRmw16XorU => "i64.atomic.rmw16.xor_u",
+            AtomicRmw::I64AtomicRmw32XorU => "i64.atomic.rmw32.xor_u",
+            AtomicRmw::I32AtomicRmwXchg => "i32.atomic.rmw.xchg",
+            AtomicRmw::I64AtomicRmwXchg => "i64.atomic.rmw.xchg",
+            AtomicRmw::I32AtomicRmw8XchgU => "i32.atomic.rmw8.xchg_u",
+            AtomicRmw::I32AtomicRmw16XchgU => "i32.atomic.rmw16.xchg_u",
+            AtomicRmw::I64AtomicRmw8XchgU => "i64.atomic.rmw8.xchg_u",
+            AtomicRmw::I64AtomicRmw16XchgU => "i64.atomic.rmw16.xchg_u",
+            AtomicRmw::I64AtomicRmw32XchgU => "i64.atomic.rmw32.xchg_u",
+        }
+    }
+    
+    fn to_type(self) -> FunctionType {
+        use AtomicRmw::*;
+        use ValType::*;
+        match self {
+            I32AtomicRmwAdd |
+            I32AtomicRmw8AddU |
+            I32AtomicRmw16AddU => FunctionType::new(&[I32, I32], &[I32]),
+            I64AtomicRmwAdd |
+            I64AtomicRmw8AddU |
+            I64AtomicRmw16AddU |
+            I64AtomicRmw32AddU => FunctionType::new(&[I32, I64], &[I64]),
+
+            I32AtomicRmwSub |
+            I32AtomicRmw8SubU |
+            I32AtomicRmw16SubU => FunctionType::new(&[I32, I32], &[I32]),
+            I64AtomicRmwSub |
+            I64AtomicRmw8SubU |
+            I64AtomicRmw16SubU |
+            I64AtomicRmw32SubU => FunctionType::new(&[I32, I64], &[I64]),
+
+            I32AtomicRmwAnd |
+            I32AtomicRmw8AndU |
+            I32AtomicRmw16AndU => FunctionType::new(&[I32, I32], &[I32]),
+            I64AtomicRmwAnd |
+            I64AtomicRmw8AndU |
+            I64AtomicRmw16AndU |
+            I64AtomicRmw32AndU => FunctionType::new(&[I32, I64], &[I64]),
+
+            I32AtomicRmwOr |
+            I32AtomicRmw8OrU |
+            I32AtomicRmw16OrU => FunctionType::new(&[I32, I32], &[I32]),
+            I64AtomicRmwOr |
+            I64AtomicRmw8OrU |
+            I64AtomicRmw16OrU |
+            I64AtomicRmw32OrU => FunctionType::new(&[I32, I64], &[I64]),
+
+            I32AtomicRmwXor |
+            I32AtomicRmw8XorU |
+            I32AtomicRmw16XorU => FunctionType::new(&[I32, I32], &[I32]),
+            I64AtomicRmwXor |
+            I64AtomicRmw8XorU |
+            I64AtomicRmw16XorU |
+            I64AtomicRmw32XorU => FunctionType::new(&[I32, I64], &[I64]),
+
+            I32AtomicRmwXchg |
+            I32AtomicRmw8XchgU |
+            I32AtomicRmw16XchgU => FunctionType::new(&[I32, I32], &[I32]),
+            I64AtomicRmwXchg |
+            I64AtomicRmw8XchgU |
+            I64AtomicRmw16XchgU |
+            I64AtomicRmw32XchgU => FunctionType::new(&[I32, I64], &[I64]),
+        }
+    }
+    
+    fn natural_alignment_exp(self) -> u8 {
+        match self {
+            AtomicRmw::I32AtomicRmwAdd => 2,
+            AtomicRmw::I64AtomicRmwAdd => 3,
+            AtomicRmw::I32AtomicRmw8AddU => 0,
+            AtomicRmw::I32AtomicRmw16AddU => 1,
+            AtomicRmw::I64AtomicRmw8AddU => 0,
+            AtomicRmw::I64AtomicRmw16AddU => 1,
+            AtomicRmw::I64AtomicRmw32AddU => 2,
+            AtomicRmw::I32AtomicRmwSub => 2,
+            AtomicRmw::I64AtomicRmwSub => 3,
+            AtomicRmw::I32AtomicRmw8SubU => 0,
+            AtomicRmw::I32AtomicRmw16SubU => 1,
+            AtomicRmw::I64AtomicRmw8SubU => 0,
+            AtomicRmw::I64AtomicRmw16SubU => 1,
+            AtomicRmw::I64AtomicRmw32SubU => 2,
+            AtomicRmw::I32AtomicRmwAnd => 2,
+            AtomicRmw::I64AtomicRmwAnd => 3,
+            AtomicRmw::I32AtomicRmw8AndU => 0,
+            AtomicRmw::I32AtomicRmw16AndU => 1,
+            AtomicRmw::I64AtomicRmw8AndU => 0,
+            AtomicRmw::I64AtomicRmw16AndU => 1,
+            AtomicRmw::I64AtomicRmw32AndU => 2,
+            AtomicRmw::I32AtomicRmwOr => 2,
+            AtomicRmw::I64AtomicRmwOr => 3,
+            AtomicRmw::I32AtomicRmw8OrU => 0,
+            AtomicRmw::I32AtomicRmw16OrU => 1,
+            AtomicRmw::I64AtomicRmw8OrU => 0,
+            AtomicRmw::I64AtomicRmw16OrU => 1,
+            AtomicRmw::I64AtomicRmw32OrU => 2,
+            AtomicRmw::I32AtomicRmwXor => 2,
+            AtomicRmw::I64AtomicRmwXor => 3,
+            AtomicRmw::I32AtomicRmw8XorU => 0,
+            AtomicRmw::I32AtomicRmw16XorU => 1,
+            AtomicRmw::I64AtomicRmw8XorU => 0,
+            AtomicRmw::I64AtomicRmw16XorU => 1,
+            AtomicRmw::I64AtomicRmw32XorU => 2,
+            AtomicRmw::I32AtomicRmwXchg => 2,
+            AtomicRmw::I64AtomicRmwXchg => 3,
+            AtomicRmw::I32AtomicRmw8XchgU => 0,
+            AtomicRmw::I32AtomicRmw16XchgU => 1,
+            AtomicRmw::I64AtomicRmw8XchgU => 0,
+            AtomicRmw::I64AtomicRmw16XchgU => 1,
+            AtomicRmw::I64AtomicRmw32XchgU => 2,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub enum AtomicCmpxchg {
+    I32AtomicRmwCmpxchg,
+    I64AtomicRmwCmpxchg,
+    I32AtomicRmw8CmpxchgU,
+    I32AtomicRmw16CmpxchgU,
+    I64AtomicRmw8CmpxchgU,
+    I64AtomicRmw16CmpxchgU,
+    I64AtomicRmw32CmpxchgU,
+}
+
+impl MemoryOp for AtomicCmpxchg {
+    fn to_name(self) -> &'static str {
+        match self {
+            AtomicCmpxchg::I32AtomicRmwCmpxchg => "i32.atomic.rmw.cmpxchg",
+            AtomicCmpxchg::I64AtomicRmwCmpxchg => "i64.atomic.rmw.cmpxchg",
+            AtomicCmpxchg::I32AtomicRmw8CmpxchgU => "i32.atomic.rmw8.cmpxchg_u",
+            AtomicCmpxchg::I32AtomicRmw16CmpxchgU => "i32.atomic.rmw16.cmpxchg_u",
+            AtomicCmpxchg::I64AtomicRmw8CmpxchgU => "i64.atomic.rmw8.cmpxchg_u",
+            AtomicCmpxchg::I64AtomicRmw16CmpxchgU => "i64.atomic.rmw16.cmpxchg_u",
+            AtomicCmpxchg::I64AtomicRmw32CmpxchgU => "i64.atomic.rmw32.cmpxchg_u",
+        }
+    }
+    
+    fn to_type(self) -> FunctionType {
+        use AtomicCmpxchg::*;
+        use ValType::*;
+        match self {
+            I32AtomicRmwCmpxchg |
+            I32AtomicRmw8CmpxchgU |
+            I32AtomicRmw16CmpxchgU => FunctionType::new(&[I32, I32, I32], &[I32]),
+            I64AtomicRmwCmpxchg |
+            I64AtomicRmw8CmpxchgU |
+            I64AtomicRmw16CmpxchgU |
+            I64AtomicRmw32CmpxchgU => FunctionType::new(&[I32, I64, I64], &[I64]),
+        }
+    }
+    
+    fn natural_alignment_exp(self) -> u8 {
+        match self {
+            AtomicCmpxchg::I32AtomicRmwCmpxchg => 2,
+            AtomicCmpxchg::I64AtomicRmwCmpxchg => 3,
+            AtomicCmpxchg::I32AtomicRmw8CmpxchgU => 0,
+            AtomicCmpxchg::I32AtomicRmw16CmpxchgU => 1,
+            AtomicCmpxchg::I64AtomicRmw8CmpxchgU => 0,
+            AtomicCmpxchg::I64AtomicRmw16CmpxchgU => 1,
+            AtomicCmpxchg::I64AtomicRmw32CmpxchgU => 2,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub enum AtomicWait {
+    MemoryAtomicWait32,
+    MemoryAtomicWait64,
+}
+
+impl MemoryOp for AtomicWait {
+    fn to_name(self) -> &'static str {
+        match self {
+            AtomicWait::MemoryAtomicWait32 => "memory.atomic.wait32",
+            AtomicWait::MemoryAtomicWait64 => "memory.atomic.wait64",
+        }
+    }
+    
+    fn to_type(self) -> FunctionType {
+        use AtomicWait::*;
+        use ValType::*;
+        match self {
+            MemoryAtomicWait32 => FunctionType::new(&[I32, I32, I64], &[I32]),
+            MemoryAtomicWait64 => FunctionType::new(&[I32, I64, I64], &[I32]),
+        }
+    }
+    
+    fn natural_alignment_exp(self) -> u8 {
+        match self {
+            AtomicWait::MemoryAtomicWait32 => 2,
+            AtomicWait::MemoryAtomicWait64 => 3,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub enum AtomicNotify {
+    MemoryAtomicNotify,
+}
+
+impl MemoryOp for AtomicNotify {
+    fn to_name(self)  -> &'static str {
+        match self {
+            AtomicNotify::MemoryAtomicNotify => "memory.atomic.notify"
+        }
+    }
+    
+    fn to_type(self) -> FunctionType {
+        use ValType::*;
+        match self {
+            AtomicNotify::MemoryAtomicNotify => FunctionType::new(&[I32, I32], &[I32])
+        }
+    }
+    
+    fn natural_alignment_exp(self) -> u8 {
+        match self {
+            AtomicNotify::MemoryAtomicNotify => 2,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub enum AtomicOp {
+    Load(AtomicLoad),
+    Store(AtomicStore),
+    Rmw(AtomicRmw),
+    Cmpxchg(AtomicCmpxchg),
+    Wait(AtomicWait),
+    Notify(AtomicNotify),
+}
+
+impl MemoryOp for AtomicOp {
+    fn to_name(self) -> &'static str {
+        match self {
+            AtomicOp::Load(op) => op.to_name(),
+            AtomicOp::Store(op) => op.to_name(),
+            AtomicOp::Rmw(op) => op.to_name(),
+            AtomicOp::Cmpxchg(op) => op.to_name(),
+            AtomicOp::Wait(op) => op.to_name(),
+            AtomicOp::Notify(op) => op.to_name(),
+        }
+    }
+
+    fn to_type(self) -> FunctionType {
+        match self {
+            AtomicOp::Load(op) => op.to_type(),
+            AtomicOp::Store(op) => op.to_type(),
+            AtomicOp::Rmw(op) => op.to_type(),
+            AtomicOp::Cmpxchg(op) => op.to_type(),
+            AtomicOp::Wait(op) => op.to_type(),
+            AtomicOp::Notify(op) => op.to_type(),
+        }
+    }
+
+    fn natural_alignment_exp(self) -> u8 {
+        match self {
+            AtomicOp::Load(op) => op.natural_alignment_exp(),
+            AtomicOp::Store(op) => op.natural_alignment_exp(),
+            AtomicOp::Rmw(op) => op.natural_alignment_exp(),
+            AtomicOp::Cmpxchg(op) => op.natural_alignment_exp(),
+            AtomicOp::Wait(op) => op.natural_alignment_exp(),
+            AtomicOp::Notify(op) => op.natural_alignment_exp(),
+        }
+    }
 }
 
 /// Common trait for `LoadOp` and `StoreOp`.
@@ -1668,6 +2120,9 @@ impl Instr {
             RefNull(_) => "rf.null",
             RefIsNull => "ref.is_null",
             RefFunc(_) => "ref.func",
+
+            Atomic(op, _) => op.to_name(),
+            AtomicFence => "atomic.fence"
         }
     }
 
@@ -1679,7 +2134,7 @@ impl Instr {
         use Instr::*;
         use ValType::*;
         match *self {
-            Nop => Some(FunctionType::new(&[], &[])),
+            Nop | AtomicFence => Some(FunctionType::new(&[], &[])),
             Load(ref op, _) => Some(op.to_type()),
             Store(ref op, _) => Some(op.to_type()),
 
@@ -1723,6 +2178,8 @@ impl Instr {
             TableCopy(_, _) => Some(FunctionType::new(&[I32, I32, I32], &[])),
             TableInit(_, _) => Some(FunctionType::new(&[I32, I32, I32], &[])),
             ElemDrop(_) => Some(FunctionType::new(&[], &[])),
+
+            Atomic(op, _) => Some(op.to_type())
         }
     }
 }
@@ -1829,7 +2286,7 @@ impl fmt::Display for Instr {
         match self {
             // instructions without arguments
             Unreachable | Nop | Drop | Select | Return | Else | End | MemorySize(_)
-            | MemoryGrow(_) | Unary(_) | Binary(_) | RefIsNull | MemoryFill | MemoryCopy => Ok(()),
+            | MemoryGrow(_) | Unary(_) | Binary(_) | RefIsNull | MemoryFill | MemoryCopy | AtomicFence => Ok(()),
 
             Block(ty) | Loop(ty) | If(ty) => write!(f, " {ty}"),
 
@@ -1881,6 +2338,12 @@ impl fmt::Display for Instr {
 
             MemoryInit(data_idx) => write!(f, " {data_idx:?}"),
             DataDrop(data_idx) => write!(f, " {data_idx:?}"),
+            Atomic(op, memarg) => {
+                if !memarg.is_default(*op) {
+                    f.write_str(" ")?;
+                }
+                memarg.fmt(f, *op)
+            },
         }
     }
 }
