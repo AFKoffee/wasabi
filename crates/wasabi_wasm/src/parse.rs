@@ -856,76 +856,271 @@ fn parse_instr(op: wp::Operator, offset: usize, types: &Types) -> Result<Instr, 
         wp::TableGrow { table } => TableGrow(table.into()),
         wp::TableSize { table } => TableSize(table.into()),
 
-        wp::MemoryAtomicNotify { memarg: _ }
-        | wp::MemoryAtomicWait32 { memarg: _ }
-        | wp::MemoryAtomicWait64 { memarg: _ }
-        | wp::AtomicFence
-        | wp::I32AtomicLoad { memarg: _ }
-        | wp::I64AtomicLoad { memarg: _ }
-        | wp::I32AtomicLoad8U { memarg: _ }
-        | wp::I32AtomicLoad16U { memarg: _ }
-        | wp::I64AtomicLoad8U { memarg: _ }
-        | wp::I64AtomicLoad16U { memarg: _ }
-        | wp::I64AtomicLoad32U { memarg: _ }
-        | wp::I32AtomicStore { memarg: _ }
-        | wp::I64AtomicStore { memarg: _ }
-        | wp::I32AtomicStore8 { memarg: _ }
-        | wp::I32AtomicStore16 { memarg: _ }
-        | wp::I64AtomicStore8 { memarg: _ }
-        | wp::I64AtomicStore16 { memarg: _ }
-        | wp::I64AtomicStore32 { memarg: _ }
-        | wp::I32AtomicRmwAdd { memarg: _ }
-        | wp::I64AtomicRmwAdd { memarg: _ }
-        | wp::I32AtomicRmw8AddU { memarg: _ }
-        | wp::I32AtomicRmw16AddU { memarg: _ }
-        | wp::I64AtomicRmw8AddU { memarg: _ }
-        | wp::I64AtomicRmw16AddU { memarg: _ }
-        | wp::I64AtomicRmw32AddU { memarg: _ }
-        | wp::I32AtomicRmwSub { memarg: _ }
-        | wp::I64AtomicRmwSub { memarg: _ }
-        | wp::I32AtomicRmw8SubU { memarg: _ }
-        | wp::I32AtomicRmw16SubU { memarg: _ }
-        | wp::I64AtomicRmw8SubU { memarg: _ }
-        | wp::I64AtomicRmw16SubU { memarg: _ }
-        | wp::I64AtomicRmw32SubU { memarg: _ }
-        | wp::I32AtomicRmwAnd { memarg: _ }
-        | wp::I64AtomicRmwAnd { memarg: _ }
-        | wp::I32AtomicRmw8AndU { memarg: _ }
-        | wp::I32AtomicRmw16AndU { memarg: _ }
-        | wp::I64AtomicRmw8AndU { memarg: _ }
-        | wp::I64AtomicRmw16AndU { memarg: _ }
-        | wp::I64AtomicRmw32AndU { memarg: _ }
-        | wp::I32AtomicRmwOr { memarg: _ }
-        | wp::I64AtomicRmwOr { memarg: _ }
-        | wp::I32AtomicRmw8OrU { memarg: _ }
-        | wp::I32AtomicRmw16OrU { memarg: _ }
-        | wp::I64AtomicRmw8OrU { memarg: _ }
-        | wp::I64AtomicRmw16OrU { memarg: _ }
-        | wp::I64AtomicRmw32OrU { memarg: _ }
-        | wp::I32AtomicRmwXor { memarg: _ }
-        | wp::I64AtomicRmwXor { memarg: _ }
-        | wp::I32AtomicRmw8XorU { memarg: _ }
-        | wp::I32AtomicRmw16XorU { memarg: _ }
-        | wp::I64AtomicRmw8XorU { memarg: _ }
-        | wp::I64AtomicRmw16XorU { memarg: _ }
-        | wp::I64AtomicRmw32XorU { memarg: _ }
-        | wp::I32AtomicRmwXchg { memarg: _ }
-        | wp::I64AtomicRmwXchg { memarg: _ }
-        | wp::I32AtomicRmw8XchgU { memarg: _ }
-        | wp::I32AtomicRmw16XchgU { memarg: _ }
-        | wp::I64AtomicRmw8XchgU { memarg: _ }
-        | wp::I64AtomicRmw16XchgU { memarg: _ }
-        | wp::I64AtomicRmw32XchgU { memarg: _ }
-        | wp::I32AtomicRmwCmpxchg { memarg: _ }
-        | wp::I64AtomicRmwCmpxchg { memarg: _ }
-        | wp::I32AtomicRmw8CmpxchgU { memarg: _ }
-        | wp::I32AtomicRmw16CmpxchgU { memarg: _ }
-        | wp::I64AtomicRmw8CmpxchgU { memarg: _ }
-        | wp::I64AtomicRmw16CmpxchgU { memarg: _ }
-        | wp::I64AtomicRmw32CmpxchgU { memarg: _ } => Err(ParseIssue::unsupported(
-            offset,
-            WasmExtension::ThreadsAtomics,
-        ))?,
+        wp::MemoryAtomicNotify { memarg } => Atomic(
+            AtomicOp::Notify(AtomicNotify::MemoryAtomicNotify),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::MemoryAtomicWait32 { memarg } => Atomic(
+            AtomicOp::Wait(AtomicWait::MemoryAtomicWait32),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::MemoryAtomicWait64 { memarg } => Atomic(
+            AtomicOp::Wait(AtomicWait::MemoryAtomicWait64),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::AtomicFence => AtomicFence,
+        wp::I32AtomicLoad { memarg } => Atomic(
+            AtomicOp::Load(AtomicLoad::I32AtomicLoad),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicLoad { memarg } => Atomic(
+            AtomicOp::Load(AtomicLoad::I64AtomicLoad),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicLoad8U { memarg } => Atomic(
+            AtomicOp::Load(AtomicLoad::I32AtomicLoad8U),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicLoad16U { memarg } => Atomic(
+            AtomicOp::Load(AtomicLoad::I32AtomicLoad16U),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicLoad8U { memarg } => Atomic(
+            AtomicOp::Load(AtomicLoad::I64AtomicLoad8U),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicLoad16U { memarg } => Atomic(
+            AtomicOp::Load(AtomicLoad::I64AtomicLoad32U),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicLoad32U { memarg } => Atomic(
+            AtomicOp::Load(AtomicLoad::I64AtomicLoad32U),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicStore { memarg } => Atomic(
+            AtomicOp::Store(AtomicStore::I32AtomicStore),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicStore { memarg } => Atomic(
+            AtomicOp::Store(AtomicStore::I64AtomicStore),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicStore8 { memarg } => Atomic(
+            AtomicOp::Store(AtomicStore::I32AtomicStore8),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicStore16 { memarg } => Atomic(
+            AtomicOp::Store(AtomicStore::I32AtomicStore16),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicStore8 { memarg } => Atomic(
+            AtomicOp::Store(AtomicStore::I64AtomicStore8),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicStore16 { memarg } => Atomic(
+            AtomicOp::Store(AtomicStore::I64AtomicStore16),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicStore32 { memarg } => Atomic(
+            AtomicOp::Store(AtomicStore::I64AtomicStore32),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmwAdd { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmwAdd),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmwAdd { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmwAdd),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw8AddU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8AddU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw16AddU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16AddU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw8AddU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8AddU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw16AddU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16AddU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw32AddU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32AddU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmwSub { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmwSub),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmwSub { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmwSub),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw8SubU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8SubU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw16SubU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16SubU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw8SubU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8SubU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw16SubU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16SubU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw32SubU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32SubU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmwAnd { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmwAnd),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmwAnd { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmwAnd),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw8AndU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8AndU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw16AndU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16AndU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw8AndU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8AndU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw16AndU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16AndU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw32AndU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32AndU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmwOr { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmwOr),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmwOr { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmwOr),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw8OrU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8OrU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw16OrU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16OrU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw8OrU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8OrU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw16OrU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16OrU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw32OrU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32OrU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmwXor { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmwXor),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmwXor { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmwXor),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw8XorU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8XorU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw16XorU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16XorU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw8XorU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8XorU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw16XorU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16XorU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw32XorU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32XorU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmwXchg { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmwXchg),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmwXchg { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmwXchg),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw8XchgU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw8XchgU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw16XchgU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I32AtomicRmw16XchgU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw8XchgU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw8XchgU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw16XchgU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw16XchgU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw32XchgU { memarg } => Atomic(
+            AtomicOp::Rmw(AtomicRmw::I64AtomicRmw32XchgU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmwCmpxchg { memarg } => Atomic(
+            AtomicOp::Cmpxchg(AtomicCmpxchg::I32AtomicRmwCmpxchg),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmwCmpxchg { memarg } => Atomic(
+            AtomicOp::Cmpxchg(AtomicCmpxchg::I64AtomicRmwCmpxchg),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw8CmpxchgU { memarg } => Atomic(
+            AtomicOp::Cmpxchg(AtomicCmpxchg::I32AtomicRmw8CmpxchgU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I32AtomicRmw16CmpxchgU { memarg } => Atomic(
+            AtomicOp::Cmpxchg(AtomicCmpxchg::I32AtomicRmw16CmpxchgU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw8CmpxchgU { memarg } => Atomic(
+            AtomicOp::Cmpxchg(AtomicCmpxchg::I64AtomicRmw8CmpxchgU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw16CmpxchgU { memarg } => Atomic(
+            AtomicOp::Cmpxchg(AtomicCmpxchg::I64AtomicRmw16CmpxchgU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
+        wp::I64AtomicRmw32CmpxchgU { memarg } => Atomic(
+            AtomicOp::Cmpxchg(AtomicCmpxchg::I64AtomicRmw32CmpxchgU),
+            parse_memarg(memarg, offset + 1)?,
+        ),
 
         wp::V128Load { memarg: _ }
         | wp::V128Load8x8S { memarg: _ }
