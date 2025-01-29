@@ -930,8 +930,11 @@ pub fn add_hooks(
                 },
                 ElemDrop(_) |
                 DataDrop(_) |
-                Atomic(_, _) |
                 AtomicFence => {
+                    instrumented_body.push(instr);
+                },
+                Atomic(_, _) => {
+                    type_stack.instr(&instr.simple_type().unwrap());
                     instrumented_body.push(instr);
                 }
             }
