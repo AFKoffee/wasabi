@@ -37,6 +37,8 @@ let Wasabi = {
         "table_set",
         "table_grow",
         "table_fill",
+        "wait",
+        "notify",
     ],
 
     // map a table index to a function index
@@ -138,6 +140,8 @@ let Wasabi = {
         table_set(location, index, value) {},
         table_grow(location, n, val, previusElement) {},
         table_fill(location, index, value, length) {},
+        wait(location, index, memarg, expected, timeout, status) {},
+        notify(location, index, memarg, count, woken) {},
     }
 
     const assertInstantiationPrecondition = function() {

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use parking_lot::RwLock;
 use parking_lot::RwLockUpgradableReadGuard;
+use wasabi_wasm::AtomicOp;
 use wasabi_wasm::Function;
 use wasabi_wasm::FunctionType;
 use wasabi_wasm::Idx;
@@ -195,6 +196,19 @@ impl HookMap {
                 Hook::new(ll_name, args, "binary", js_args)
             }
 
+            Atomic(AtomicOp::Wait(op), _)  => {
+                let expected_ty = op.to_type().inputs()[1];
+                let args = args!(offset: I32, align: I32, addr: I32, expected: expected_ty, timeout: I64, status: I32);
+                let js_args = "{addr, offset, align}, expected, timeout, status";
+                Hook::new(ll_name, args, "wait", js_args)
+            }
+
+            Atomic(AtomicOp::Notify(_), _) => {
+                let args = args!(offset: I32, align: I32, addr: I32, count: I32, woken: I32);
+                let js_args = "{addr, offset, align}, count, woken";
+                Hook::new(ll_name, args, "notify", js_args)
+            }
+
 
             /*
                 polymorphic instructions:
@@ -291,7 +305,12 @@ impl HookMap {
                 Hook::new(ll_name, args, "ref.is_null", js_args)
             }
 
-            RefFunc(_) | RefNull(_) | ElemDrop(_) | DataDrop(_) | Atomic(_, _) | AtomicFence => todo!("instrumentation not supported!"),
+            RefFunc(_) | 
+            RefNull(_) | 
+            ElemDrop(_) | 
+            DataDrop(_) | 
+            Atomic(_, _) | 
+            AtomicFence => todo!("instrumentation not supported!"),
             }
         };
 

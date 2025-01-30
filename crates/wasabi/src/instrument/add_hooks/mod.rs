@@ -3,6 +3,7 @@ use std::convert::TryInto;
 use parking_lot::RwLock;
 use rayon::prelude::*;
 use serde_json;
+use wasabi_wasm::AtomicOp;
 use wasabi_wasm::Function;
 use wasabi_wasm::FunctionType;
 use wasabi_wasm::GlobalOp;
@@ -808,6 +809,56 @@ pub fn add_hooks(
                         instrumented_body.push(instr);
                     }
                 },
+
+                Atomic(AtomicOp::Wait(op), memarg) => {
+                    let ty = op.to_type();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::AtomicWait) {
+                        let input_tmps = function.add_fresh_locals(ty.inputs());
+                        let result_tmps = function.add_fresh_locals(ty.results());
+                        save_stack_to_locals(&mut instrumented_body, &input_tmps);
+                        instrumented_body.push(instr.clone());
+                        save_stack_to_locals(&mut instrumented_body, &result_tmps);
+                        instrumented_body.extend_from_slice(&[
+                            location.0.clone(),
+                            location.1.clone(),
+                            Const(Val::I32(memarg.offset as i32)),
+                            Const(Val::I32(memarg.alignment_exp as i32)),
+                        ]);
+                        restore_locals_with_i64_handling(
+                            &mut instrumented_body,
+                            input_tmps.iter().chain(result_tmps.iter()).copied(),
+                        );
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
+
+                Atomic(AtomicOp::Notify(op), memarg) => {
+                    let ty = op.to_type();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::AtomicNotify) {
+                        let input_tmps = function.add_fresh_locals(ty.inputs());
+                        let result_tmps = function.add_fresh_locals(ty.results());
+                        save_stack_to_locals(&mut instrumented_body, &input_tmps);
+                        instrumented_body.push(instr.clone());
+                        save_stack_to_locals(&mut instrumented_body, &result_tmps);
+                        instrumented_body.extend_from_slice(&[
+                            location.0.clone(), 
+                            location.1.clone(),
+                            Const(Val::I32(memarg.offset as i32)),
+                            Const(Val::I32(memarg.alignment_exp as i32)),
+                        ]);
+                        restore_locals_with_i64_handling(
+                            &mut instrumented_body,
+                            input_tmps.iter().chain(result_tmps.iter()).copied(),
+                        );
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
 
                 /* rest are "grouped instructions", i.e., where many instructions can be handled in a similar manner */
 
