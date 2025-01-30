@@ -199,16 +199,45 @@ impl HookMap {
             Atomic(AtomicOp::Wait(op), _)  => {
                 let expected_ty = op.to_type().inputs()[1];
                 let args = args!(offset: I32, align: I32, addr: I32, expected: expected_ty, timeout: I64);
-                let js_args = "{addr, offset, align}, expected, timeout";
+                let js_args = &format!("\"{}\", {{addr, offset, align}}, expected, timeout", instr.to_name());
                 Hook::new(ll_name, args, "wait", js_args)
             }
 
             Atomic(AtomicOp::Notify(_), _) => {
                 let args = args!(offset: I32, align: I32, addr: I32, count: I32, woken: I32);
-                let js_args = "{addr, offset, align}, count, woken";
+                let js_args = &format!("\"{}\", {{addr, offset, align}}, count, woken", instr.to_name());
                 Hook::new(ll_name, args, "notify", js_args)
             }
-
+            Atomic(AtomicOp::Load(op), _) => {
+                let ty = op.to_type().results()[0];
+                let args = args!(offset: I32, align: I32, addr: I32, value: ty);
+                let instr_name = instr.to_name();
+                let js_args = &format!("\"{}\", {{addr, offset, align}}, {}", instr_name, &args[3].to_lowlevel_long_expr());
+                Hook::new(ll_name, args, "atomic_load", js_args)
+            }
+            Atomic(AtomicOp::Store(op), _) => {
+                let ty = op.to_type().inputs()[1];
+                let args = args!(offset: I32, align: I32, addr: I32, value: ty);
+                let instr_name = instr.to_name();
+                let js_args = &format!("\"{}\", {{addr, offset, align}}, {}", instr_name, &args[3].to_lowlevel_long_expr());
+                Hook::new(ll_name, args, "atomic_store", js_args)
+            }
+            Atomic(AtomicOp::Rmw(op), _) => {
+                let ty = op.to_type();
+                let input = ty.inputs()[1];
+                let result = ty.results()[0];
+                let args = args!(offset: I32, align: I32, addr: I32, value: input, read: result);
+                let js_args = &format!("\"{}\", {{addr, offset, align}}, value, read", instr.to_name());
+                Hook::new(ll_name, args, "atomic_rmw", js_args)
+            }
+            Atomic(AtomicOp::Cmpxchg(op), _) => {
+                let ty = op.to_type();
+                let inputs = ty.inputs();
+                let result = ty.results()[0];
+                let args = args!(offset: I32, align: I32, addr: I32, expected: inputs[1], replacement: inputs[2], loaded: result);
+                let js_args = &format!("\"{}\", {{addr, offset, align}}, expected, replacement, loaded", instr.to_name());
+                Hook::new(ll_name, args, "atomic_cmpxchg", js_args)
+            }
 
             /*
                 polymorphic instructions:
@@ -308,8 +337,7 @@ impl HookMap {
             RefFunc(_) | 
             RefNull(_) | 
             ElemDrop(_) | 
-            DataDrop(_) | 
-            Atomic(_, _) | 
+            DataDrop(_) |
             AtomicFence => todo!("instrumentation not supported!"),
             }
         };

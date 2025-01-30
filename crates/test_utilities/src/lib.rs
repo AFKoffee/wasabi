@@ -162,7 +162,7 @@ pub fn wasm_validate(path: impl AsRef<Path>) -> Result<(), WasmValidateError> {
         .arg("validate")
         .arg("--features")
         // Disable all extensions that we don't support yet.
-        .arg("wasm2,-simd")
+        .arg("wasm2,-simd,threads")
         // .arg("--disable-saturating-float-to-int")
         // .arg("--disable-sign-extension")
         // .arg("--disable-simd")

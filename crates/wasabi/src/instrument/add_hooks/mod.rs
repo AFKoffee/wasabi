@@ -810,6 +810,54 @@ pub fn add_hooks(
                     }
                 },
 
+                /* rest are "grouped instructions", i.e., where many instructions can be handled in a similar manner */
+
+                Load(op, memarg) => {
+                    let ty = op.to_type();
+                    type_stack.instr(&ty);
+
+                    if enabled_hooks.contains(Hook::Load) {
+                        let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        let value_tmp = function.add_fresh_local(ty.results()[0]);
+
+                        instrumented_body.extend_from_slice(&[
+                            Local(Tee, addr_tmp),
+                            instr.clone(),
+                            Local(Tee, value_tmp),
+                            location.0,
+                            location.1,
+                            Const(Val::I32(memarg.offset as i32)),
+                            Const(Val::I32(memarg.alignment_exp as i32)),
+                        ]);
+                        restore_locals_with_i64_handling(&mut instrumented_body, [addr_tmp, value_tmp]);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
+                Store(op, memarg) => {
+                    let ty = op.to_type();
+                    type_stack.instr(&ty);
+
+                    if enabled_hooks.contains(Hook::Store) {
+                        let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        let value_tmp = function.add_fresh_local(ty.inputs()[1]);
+
+                        save_stack_to_locals(&mut instrumented_body, &[addr_tmp, value_tmp]);
+                        instrumented_body.extend_from_slice(&[
+                            instr.clone(),
+                            location.0,
+                            location.1,
+                            Const(Val::I32(memarg.offset as i32)),
+                            Const(Val::I32(memarg.alignment_exp as i32)),
+                        ]);
+                        restore_locals_with_i64_handling(&mut instrumented_body, [addr_tmp, value_tmp]);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
+
                 Atomic(AtomicOp::Wait(op), memarg) => {
                     let ty = op.to_type();
                     type_stack.instr(&ty);
@@ -871,13 +919,10 @@ pub fn add_hooks(
                     }
                 }
 
-                /* rest are "grouped instructions", i.e., where many instructions can be handled in a similar manner */
-
-                Load(op, memarg) => {
+                Atomic(AtomicOp::Load(op), memarg) => {
                     let ty = op.to_type();
                     type_stack.instr(&ty);
-
-                    if enabled_hooks.contains(Hook::Load) {
+                    if enabled_hooks.contains(Hook::AtomicLoad) {
                         let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
                         let value_tmp = function.add_fresh_local(ty.results()[0]);
 
@@ -896,11 +941,11 @@ pub fn add_hooks(
                         instrumented_body.push(instr);
                     }
                 }
-                Store(op, memarg) => {
+
+                Atomic(AtomicOp::Store(op), memarg) => {
                     let ty = op.to_type();
                     type_stack.instr(&ty);
-
-                    if enabled_hooks.contains(Hook::Store) {
+                    if enabled_hooks.contains(Hook::AtomicStore) {
                         let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
                         let value_tmp = function.add_fresh_local(ty.inputs()[1]);
 
@@ -913,6 +958,56 @@ pub fn add_hooks(
                             Const(Val::I32(memarg.alignment_exp as i32)),
                         ]);
                         restore_locals_with_i64_handling(&mut instrumented_body, [addr_tmp, value_tmp]);
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
+
+                Atomic(AtomicOp::Rmw(op), memarg) => {
+                    let ty = op.to_type();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::AtomicRmw) {
+                        let input_tmps = function.add_fresh_locals(ty.inputs());
+                        let result_tmps = function.add_fresh_locals(ty.results());
+                        save_stack_to_locals(&mut instrumented_body, &input_tmps);
+                        instrumented_body.push(instr.clone());
+                        save_stack_to_locals(&mut instrumented_body, &result_tmps);
+                        instrumented_body.extend_from_slice(&[
+                            location.0.clone(), 
+                            location.1.clone(),
+                            Const(Val::I32(memarg.offset as i32)),
+                            Const(Val::I32(memarg.alignment_exp as i32)),
+                        ]);
+                        restore_locals_with_i64_handling(
+                            &mut instrumented_body,
+                            input_tmps.iter().chain(result_tmps.iter()).copied(),
+                        );
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+                    } else {
+                        instrumented_body.push(instr);
+                    }
+                }
+
+                Atomic(AtomicOp::Cmpxchg(op), memarg) => {
+                    let ty = op.to_type();
+                    type_stack.instr(&ty);
+                    if enabled_hooks.contains(Hook::AtomicCmpxchg) {
+                        let input_tmps = function.add_fresh_locals(ty.inputs());
+                        let result_tmps = function.add_fresh_locals(ty.results());
+                        save_stack_to_locals(&mut instrumented_body, &input_tmps);
+                        instrumented_body.push(instr.clone());
+                        save_stack_to_locals(&mut instrumented_body, &result_tmps);
+                        instrumented_body.extend_from_slice(&[
+                            location.0.clone(), 
+                            location.1.clone(),
+                            Const(Val::I32(memarg.offset as i32)),
+                            Const(Val::I32(memarg.alignment_exp as i32)),
+                        ]);
+                        restore_locals_with_i64_handling(
+                            &mut instrumented_body,
+                            input_tmps.iter().chain(result_tmps.iter()).copied(),
+                        );
                         instrumented_body.push(hooks.instr(&instr, &[]));
                     } else {
                         instrumented_body.push(instr);
@@ -993,10 +1088,6 @@ pub fn add_hooks(
                 ElemDrop(_) |
                 DataDrop(_) |
                 AtomicFence => {
-                    instrumented_body.push(instr);
-                },
-                Atomic(_, _) => {
-                    type_stack.instr(&instr.simple_type().unwrap());
                     instrumented_body.push(instr);
                 }
             }

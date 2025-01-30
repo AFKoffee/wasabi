@@ -39,6 +39,10 @@ let Wasabi = {
         "table_fill",
         "wait",
         "notify",
+        "atomic_load",
+        "atomic_store",
+        "atomic_rmw",
+        "atomic_cmpxchg",
     ],
 
     // map a table index to a function index
@@ -140,8 +144,12 @@ let Wasabi = {
         table_set(location, index, value) {},
         table_grow(location, n, val, previusElement) {},
         table_fill(location, index, value, length) {},
-        wait(location, index, memarg, expected, timeout, status) {},
-        notify(location, index, memarg, count, woken) {},
+        wait(location, op, memarg, expected, timeout) {},
+        notify(location, op, memarg, count, woken) {},
+        atomic_load(location, op, memarg, value) {},
+        atomic_store(location, op, memarg, value) {},
+        atomic_rmw(location, op, memarg, value, read) {},
+        atomic_cmpxchg(location, op, memarg, expected, replacement, loaded) {},
     }
 
     const assertInstantiationPrecondition = function() {
