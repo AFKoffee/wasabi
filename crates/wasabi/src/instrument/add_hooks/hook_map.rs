@@ -198,8 +198,8 @@ impl HookMap {
 
             Atomic(AtomicOp::Wait(op), _)  => {
                 let expected_ty = op.to_type().inputs()[1];
-                let args = args!(offset: I32, align: I32, addr: I32, expected: expected_ty, timeout: I64, status: I32);
-                let js_args = "{addr, offset, align}, expected, timeout, status";
+                let args = args!(offset: I32, align: I32, addr: I32, expected: expected_ty, timeout: I64);
+                let js_args = "{addr, offset, align}, expected, timeout";
                 Hook::new(ll_name, args, "wait", js_args)
             }
 

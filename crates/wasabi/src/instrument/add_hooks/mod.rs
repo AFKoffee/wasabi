@@ -813,23 +813,34 @@ pub fn add_hooks(
                 Atomic(AtomicOp::Wait(op), memarg) => {
                     let ty = op.to_type();
                     type_stack.instr(&ty);
+                    // Note: The AtomicWait hook is called BEFORE the original instruction
                     if enabled_hooks.contains(Hook::AtomicWait) {
                         let input_tmps = function.add_fresh_locals(ty.inputs());
-                        let result_tmps = function.add_fresh_locals(ty.results());
-                        save_stack_to_locals(&mut instrumented_body, &input_tmps);
-                        instrumented_body.push(instr.clone());
-                        save_stack_to_locals(&mut instrumented_body, &result_tmps);
+
+                        // copy stack values into locals
+                        for &local in input_tmps.iter().rev() {
+                            instrumented_body.push(Instr::Local(Set, local));
+                        }
+
                         instrumented_body.extend_from_slice(&[
                             location.0.clone(),
                             location.1.clone(),
                             Const(Val::I32(memarg.offset as i32)),
                             Const(Val::I32(memarg.alignment_exp as i32)),
                         ]);
+
+                        // and restore (saving has removed them from the stack)
+                        for &local in input_tmps.iter() {
+                            instrumented_body.push(Instr::Local(Get, local));
+                        }
+
+                        instrumented_body.push(hooks.instr(&instr, &[]));
+
                         restore_locals_with_i64_handling(
                             &mut instrumented_body,
-                            input_tmps.iter().chain(result_tmps.iter()).copied(),
+                            input_tmps.iter()/*.chain(result_tmps.iter())*/.copied(),
                         );
-                        instrumented_body.push(hooks.instr(&instr, &[]));
+                        instrumented_body.push(instr);
                     } else {
                         instrumented_body.push(instr);
                     }

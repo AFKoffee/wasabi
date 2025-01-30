@@ -172,8 +172,15 @@ let Wasabi = {
         assertInstantiationPrecondition();
         const result = oldInstantiate(sourceBuffer, importObjectWithHooks(importObject));
         // as soon as instance is available, save exports and table
-        result.then(({module, instance}) => {
-            wireInstanceExports(instance);
+        result.then((res) => {
+            // Hacky workaround to make it work with wasm_bindgen binaries
+            WebAssembly.Instance = oldInstance;
+            if (res instanceof WebAssembly.Instance) {
+                wireInstanceExports(res);
+            } else {
+                let {module, instance} = res;
+                wireInstanceExports(instance)
+            }
         });
 
         WebAssembly.instantiate = oldInstantiate; // TODO: Why is this here?
