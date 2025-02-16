@@ -37,6 +37,12 @@ let Wasabi = {
         "table_set",
         "table_grow",
         "table_fill",
+        "wait",
+        "notify",
+        "atomic_load",
+        "atomic_store",
+        "atomic_rmw",
+        "atomic_cmpxchg",
     ],
 
     // map a table index to a function index
@@ -138,6 +144,12 @@ let Wasabi = {
         table_set(location, index, value) {},
         table_grow(location, n, val, previusElement) {},
         table_fill(location, index, value, length) {},
+        wait(location, op, memarg, expected, timeout) {},
+        notify(location, op, memarg, count, woken) {},
+        atomic_load(location, op, memarg, value) {},
+        atomic_store(location, op, memarg, value) {},
+        atomic_rmw(location, op, memarg, value, read) {},
+        atomic_cmpxchg(location, op, memarg, expected, replacement, loaded) {},
     }
 
     const assertInstantiationPrecondition = function() {
@@ -168,8 +180,15 @@ let Wasabi = {
         assertInstantiationPrecondition();
         const result = oldInstantiate(sourceBuffer, importObjectWithHooks(importObject));
         // as soon as instance is available, save exports and table
-        result.then(({module, instance}) => {
-            wireInstanceExports(instance);
+        result.then((res) => {
+            // Hacky workaround to make it work with wasm_bindgen binaries
+            WebAssembly.Instance = oldInstance;
+            if (res instanceof WebAssembly.Instance) {
+                wireInstanceExports(res);
+            } else {
+                let {module, instance} = res;
+                wireInstanceExports(instance)
+            }
         });
 
         WebAssembly.instantiate = oldInstantiate; // TODO: Why is this here?

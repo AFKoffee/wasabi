@@ -115,6 +115,12 @@ pub enum Hook {
     MemoryFill,
     MemoryCopy,
     MemoryInit,
+    AtomicWait,
+    AtomicNotify,
+    AtomicLoad,
+    AtomicStore,
+    AtomicRmw,
+    AtomicCmpxchg,
 }
 
 // Use serde_plain for parsing strings to enum variants.
