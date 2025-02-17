@@ -4,6 +4,7 @@ members = [
     "wasabi_wasm",
     "wasabi_js",
     "test_utilities",
+    "fuzz",
 ]
 resolver = "2"
 
