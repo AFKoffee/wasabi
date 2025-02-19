@@ -1,10 +1,9 @@
 [workspace]
 members = [
-    "wasabi",
     "wasabi_wasm",
     "wasabi_js",
     "test_utilities",
-    "afl-fuzz",
+    "afl-fuzz"
 ]
 resolver = "2"
 
