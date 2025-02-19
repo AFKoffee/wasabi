@@ -1937,18 +1937,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasabi-fuzz"
-version = "0.0.0"
-dependencies = [
- "arbitrary",
- "libfuzzer-sys",
- "wasabi",
- "wasabi_wasm",
- "wasm-smith",
- "wasmparser 0.225.0",
-]
-
-[[package]]
 name = "wasabi_js"
 version = "0.1.0"
 dependencies = [
