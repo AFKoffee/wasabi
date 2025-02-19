@@ -1,0 +1,13 @@
+[package]
+name = "afl-fuzz"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+afl = "0.15.15"
+arbitrary = "1.4.1"
+libfuzzer-sys = "0.4"
+wasabi = { path = "../wasabi" }
+wasabi_wasm = { path = "../wasabi_wasm" }
+wasm-smith = { version = "0.225.0", features = ["wasmparser"] }
+wasmparser = "0.225.0"
