@@ -607,10 +607,12 @@ fn parse_instr(op: wp::Operator, offset: usize, types: &Types) -> Result<Instr, 
         wp::CallIndirect {
             type_index,
             table_index,
-            table_byte,
+            table_byte: _,
         } => {
             let table_idx = if table_index != 0 { table_index } else { 0 }; // TODO: Remove this line???
-            assert!(table_byte == 0, "not sure which extension this is");
+            // Refer to  https://github.com/bytecodealliance/wasm-tools/pull/1548:
+            // Table_byte was only used to get the spec tests passing but does not serve any other purpose
+            //assert!(table_byte == 0, "not sure which extension this is");
             CallIndirect(types.get(type_index, offset + 1)?, table_idx.into())
         }
 
