@@ -121,6 +121,8 @@ pub enum Hook {
     AtomicStore,
     AtomicRmw,
     AtomicCmpxchg,
+
+    DeadlockDetection,
 }
 
 // Use serde_plain for parsing strings to enum variants.

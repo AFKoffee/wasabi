@@ -4,6 +4,7 @@ use parking_lot::RwLock;
 use rayon::prelude::*;
 use serde_json;
 use wasabi_wasm::AtomicOp;
+use wasabi_wasm::BinaryOp;
 use wasabi_wasm::Function;
 use wasabi_wasm::FunctionType;
 use wasabi_wasm::GlobalOp;
@@ -35,6 +36,180 @@ mod duplicate_stack;
 mod hook_map;
 mod static_info;
 pub mod type_stack;
+
+struct InternalHooks {
+    start_lock: usize,
+    finish_lock: usize,
+    start_unlock: usize,
+    finish_unlock: usize,
+    spawn_thread: usize,
+    join_thread: usize,
+    read_event: usize,
+    write_event: usize,
+    aquire_event: usize,
+    request_event: usize,
+    release_event: usize,
+    fork_event: usize,
+    join_event: usize,
+}
+impl InternalHooks {
+    fn patch_call_if_needed(&self, instrumented_body: &mut Vec<Instr>, target_func_idx: Idx<Function>, location: &(Instr, Instr)) {
+        let fidx = target_func_idx.to_usize();
+        if fidx == self.start_lock {
+            instrumented_body.extend_from_slice(&[
+                location.0.clone(),
+                location.1.clone(),
+                Call(self.request_event.into())
+            ]);
+        } else if fidx == self.finish_lock {
+            instrumented_body.extend_from_slice(&[
+                location.0.clone(),
+                location.1.clone(),
+                Call(self.aquire_event.into())
+            ]);
+        } else if fidx == self.start_unlock {
+            /*instrumented_body.extend_from_slice(&[
+                location.0.clone(),
+                location.1.clone(),
+                Call(self.aquire_event.into())
+            ]);*/
+        } else if fidx == self.finish_unlock {
+            instrumented_body.extend_from_slice(&[
+                location.0.clone(),
+                location.1.clone(),
+                Call(self.release_event.into())
+            ]);
+        } else if fidx == self.spawn_thread {
+            instrumented_body.extend_from_slice(&[
+                location.0.clone(),
+                location.1.clone(),
+                Call(self.fork_event.into())
+            ]);
+        } else if fidx == self.join_thread {
+            instrumented_body.extend_from_slice(&[
+                location.0.clone(),
+                location.1.clone(),
+                Call(self.join_event.into())
+            ]);
+        } else {
+            instrumented_body.push(Call(target_func_idx));
+        }
+    }
+    
+    fn get_read_event_hook(&self) -> usize {
+        self.read_event
+    }
+
+    fn get_write_event_hook(&self) -> usize {
+        self.write_event
+    }
+}
+
+struct InternalHookBuilder {
+    start_lock: Option<usize>,
+    finish_lock: Option<usize>,
+    start_unlock: Option<usize>,
+    finish_unlock: Option<usize>,
+    spawn_thread: Option<usize>,
+    join_thread: Option<usize>,
+    read_event: Option<usize>,
+    write_event: Option<usize>,
+    aquire_event: Option<usize>,
+    request_event: Option<usize>,
+    release_event: Option<usize>,
+    fork_event: Option<usize>,
+    join_event: Option<usize>,
+}
+
+impl InternalHookBuilder {
+    fn new() -> Self {
+        Self { 
+            start_lock: None, 
+            finish_lock: None, 
+            start_unlock: None, 
+            finish_unlock: None, 
+            spawn_thread: None, 
+            join_thread: None, 
+            read_event: None, 
+            write_event: None, 
+            aquire_event: None, 
+            request_event: None, 
+            release_event: None, 
+            fork_event: None, 
+            join_event: None 
+        }
+    }
+
+    fn with_start_lock(&mut self, fidx: usize) {
+        self.start_lock = Some(fidx)
+    }
+
+    fn with_finish_lock(&mut self, fidx: usize) {
+        self.finish_lock = Some(fidx)
+    }
+
+    fn with_start_unlock(&mut self, fidx: usize) {
+        self.start_unlock = Some(fidx)
+    }
+
+    fn with_finish_unlock(&mut self, fidx: usize) {
+        self.finish_unlock = Some(fidx)
+    }
+
+    fn with_spawn_thread(&mut self, fidx: usize) {
+        self.spawn_thread = Some(fidx)
+    }
+
+    fn with_join_thread(&mut self, fidx: usize) {
+        self.join_thread = Some(fidx)
+    }
+
+    fn with_read_event(&mut self, fidx: usize) {
+        self.read_event = Some(fidx)
+    }
+
+    fn with_write_event(&mut self, fidx: usize) {
+        self.write_event = Some(fidx)
+    }
+
+    fn with_aquire_event(&mut self, fidx: usize) {
+        self.aquire_event = Some(fidx)
+    }
+
+    fn with_request_event(&mut self, fidx: usize) {
+        self.request_event = Some(fidx)
+    }
+
+    fn with_release_event(&mut self, fidx: usize) {
+        self.release_event = Some(fidx)
+    }
+
+    fn with_fork_event(&mut self, fidx: usize) {
+        self.fork_event = Some(fidx)
+    }
+
+    fn with_join_event(&mut self, fidx: usize) {
+        self.join_event = Some(fidx)
+    }
+
+    fn build(self) -> InternalHooks {
+        InternalHooks { 
+            start_lock: self.start_lock.expect("internal start_lock hook is missing!"), 
+            finish_lock: self.finish_lock.expect("internal finish_lock hook is missing!"), 
+            start_unlock: self.start_unlock.expect("internal start_unlock hook is missing!"), 
+            finish_unlock: self.finish_unlock.expect("internal finish_unlock hook is missing!"), 
+            spawn_thread: self.spawn_thread.expect("internal spawn_thread hook is missing!"), 
+            join_thread: self.join_thread.expect("internal join_thread hook is missing!"), 
+            read_event: self.read_event.expect("internal read_event function is missing!"), 
+            write_event: self.write_event.expect("internal write_event function is missing!"), 
+            aquire_event: self.aquire_event.expect("internal aquire_event function is missing!"), 
+            request_event: self.request_event.expect("internal request_event function is missing!"), 
+            release_event: self.release_event.expect("internal release_event function is missing!"), 
+            fork_event: self.fork_event.expect("internal fork_event function is missing!"), 
+            join_event: self.join_event.expect("internal join_event function is missing!"), 
+        }
+    }
+}
 
 /// Instruments every instruction in Jalangi-style with a callback that takes inputs, outputs, and
 /// other relevant information.
@@ -68,6 +243,30 @@ pub fn add_hooks(
     } else {
         None
     };
+
+    let mut hook_builder = InternalHookBuilder::new();
+    for (fidx, f) in module.functions.iter().enumerate() {
+        for fname in f.export.iter() {
+            // TODO: Check for correct function types
+            match fname.as_str() {
+                "start_lock" => hook_builder.with_start_lock(fidx),
+                "finish_lock" => hook_builder.with_finish_lock(fidx),
+                "start_unlock" => hook_builder.with_start_unlock(fidx),
+                "finish_unlock" => hook_builder.with_finish_unlock(fidx),
+                "spawn_thread" => hook_builder.with_spawn_thread(fidx),
+                "join_thread" => hook_builder.with_join_thread(fidx),
+                "read_event" => hook_builder.with_read_event(fidx),
+                "write_event" => hook_builder.with_write_event(fidx),
+                "aquire_event" => hook_builder.with_aquire_event(fidx),
+                "request_event" => hook_builder.with_request_event(fidx),
+                "release_event" => hook_builder.with_release_event(fidx),
+                "fork_event" => hook_builder.with_fork_event(fidx),
+                "join_event" => hook_builder.with_join_event(fidx),
+                _ => continue
+            }
+        }
+    }
+    let internal_hooks = hook_builder.build();
 
     module.functions.par_iter_mut().enumerate().for_each(|(fidx, function): (usize, &mut Function)| {
         let fidx = fidx.into();
@@ -483,7 +682,9 @@ pub fn add_hooks(
                     let func_ty = &module_info.read().functions[target_func_idx.to_usize()].type_;
                     type_stack.instr(func_ty);
 
-                    if enabled_hooks.contains(Hook::Call) {
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        internal_hooks.patch_call_if_needed(&mut instrumented_body, target_func_idx, &location);
+                    } else if enabled_hooks.contains(Hook::Call) {
                         /* pre call hook */
 
                         let arg_tmps = function.add_fresh_locals(func_ty.inputs());
@@ -816,7 +1017,20 @@ pub fn add_hooks(
                     let ty = op.to_type();
                     type_stack.instr(&ty);
 
-                    if enabled_hooks.contains(Hook::Load) {
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        instrumented_body.extend_from_slice(&[
+                            Local(Tee, addr_tmp),
+                            instr, // Only return value is on the stack
+                            Local(Get, addr_tmp), // Return value and address are on the stack
+                            Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
+                            Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
+                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            location.0,
+                            location.1,
+                            Call(internal_hooks.get_read_event_hook().into()) // Only return value is on the stack (hook has 4 arguments)
+                        ]);
+                    } else if enabled_hooks.contains(Hook::Load) {
                         let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
                         let value_tmp = function.add_fresh_local(ty.results()[0]);
 
@@ -839,7 +1053,27 @@ pub fn add_hooks(
                     let ty = op.to_type();
                     type_stack.instr(&ty);
 
-                    if enabled_hooks.contains(Hook::Store) {
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        // FIXME:
+                        // Add a global, which prevents infinite recursion during execution of the hook
+                        // Effectively: Turn hooks off for the current thread while the hook runs.
+                        let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        let value_tmp = function.add_fresh_local(ty.inputs()[1]);
+
+                        instrumented_body.extend_from_slice(&[
+                            Local(Set, value_tmp),
+                            Local(Tee, addr_tmp),
+                            Local(Get, value_tmp),
+                            instr,
+                            Local(Get, addr_tmp),
+                            Const(Val::I32(memarg.offset as i32)),
+                            Binary(BinaryOp::I32Add),
+                            Const(Val::I32(memarg.alignment_exp as i32)),
+                            location.0,
+                            location.1,
+                            Call(internal_hooks.get_write_event_hook().into())
+                        ]);
+                    } else if enabled_hooks.contains(Hook::Store) {
                         let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
                         let value_tmp = function.add_fresh_local(ty.inputs()[1]);
 
