@@ -244,6 +244,12 @@ pub fn add_hooks(
         None
     };
 
+    let inside_hook_global = if enabled_hooks.contains(Hook::DeadlockDetection) {
+        Some(module.add_global(I32, Mutability::Mut, vec![Const(Val::I32(1)), End]))
+    } else {
+        None
+    };
+
     let mut hook_builder = InternalHookBuilder::new();
     for (fidx, f) in module.functions.iter().enumerate() {
         for fname in f.export.iter() {
@@ -1022,13 +1028,22 @@ pub fn add_hooks(
                         instrumented_body.extend_from_slice(&[
                             Local(Tee, addr_tmp),
                             instr, // Only return value is on the stack
+                            Global(GlobalOp::Get, inside_hook_global.unwrap()),
+                            If(FunctionType::new(&[], &[])),
+                            Nop,
+                            Else,
                             Local(Get, addr_tmp), // Return value and address are on the stack
                             Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
                             Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
                             Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
                             location.0,
                             location.1,
-                            Call(internal_hooks.get_read_event_hook().into()) // Only return value is on the stack (hook has 4 arguments)
+                            Const(Val::I32(1)),
+                            Global(GlobalOp::Set, inside_hook_global.unwrap()),
+                            Call(internal_hooks.get_read_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                            Const(Val::I32(0)),
+                            Global(GlobalOp::Set, inside_hook_global.unwrap()),
+                            End,
                         ]);
                     } else if enabled_hooks.contains(Hook::Load) {
                         let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
@@ -1065,13 +1080,22 @@ pub fn add_hooks(
                             Local(Tee, addr_tmp),
                             Local(Get, value_tmp),
                             instr,
-                            Local(Get, addr_tmp),
-                            Const(Val::I32(memarg.offset as i32)),
-                            Binary(BinaryOp::I32Add),
-                            Const(Val::I32(memarg.alignment_exp as i32)),
+                            Global(GlobalOp::Get, inside_hook_global.unwrap()),
+                            If(FunctionType::new(&[], &[])),
+                            Nop,
+                            Else,
+                            Local(Get, addr_tmp), // Return value and address are on the stack
+                            Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
+                            Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
+                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
                             location.0,
                             location.1,
-                            Call(internal_hooks.get_write_event_hook().into())
+                            Const(Val::I32(1)),
+                            Global(GlobalOp::Set, inside_hook_global.unwrap()),
+                            Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                            Const(Val::I32(0)),
+                            Global(GlobalOp::Set, inside_hook_global.unwrap()),
+                            End,
                         ]);
                     } else if enabled_hooks.contains(Hook::Store) {
                         let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
@@ -1325,6 +1349,15 @@ pub fn add_hooks(
                     instrumented_body.push(instr);
                 }
             }
+        }
+
+        if module_info.read().start == Some(fidx) && enabled_hooks.contains(Hook::DeadlockDetection) {
+            // We have to ensure, that deadlock instrumentation hooks are called AFTER 
+            // start function returns as wasm-bindgen does TLS setup there
+            instrumented_body.extend_from_slice(&[
+                Const(Val::I32(0)),
+                Global(GlobalOp::Set, inside_hook_global.unwrap()),
+            ]);
         }
 
         // finally, switch dummy body out against instrumented body
