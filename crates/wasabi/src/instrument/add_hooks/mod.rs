@@ -60,7 +60,7 @@ impl InternalHooks {
             fidx == self.join_thread || 
             fidx == self.spawn_thread || 
             fidx == self.finish_unlock || 
-            /* fidx == self.start_unlock ||*/ 
+            fidx == self.start_unlock ||
             fidx == self.finish_lock ||
             fidx == self.start_lock
         {
