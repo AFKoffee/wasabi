@@ -1062,22 +1062,13 @@ pub fn add_hooks(
                         instrumented_body.extend_from_slice(&[
                             Local(Tee, addr_tmp),
                             instr, // Only return value is on the stack
-                            //Global(GlobalOp::Get, inside_hook_global.unwrap()),
-                            //If(FunctionType::new(&[], &[])),
-                            //Nop,
-                            //Else,
                             Local(Get, addr_tmp), // Return value and address are on the stack
                             Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
                             Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
                             Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
                             location.0,
                             location.1,
-                            //Const(Val::I32(1)),
-                            //Global(GlobalOp::Set, inside_hook_global.unwrap()),
                             Call(internal_hooks.get_read_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
-                            //Const(Val::I32(0)),
-                            //Global(GlobalOp::Set, inside_hook_global.unwrap()),
-                            //End,
                         ]);
                     } else if enabled_hooks.contains(Hook::Load) {
                         let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
@@ -1103,9 +1094,6 @@ pub fn add_hooks(
                     type_stack.instr(&ty);
 
                     if enabled_hooks.contains(Hook::DeadlockDetection) {
-                        // FIXME:
-                        // Add a global, which prevents infinite recursion during execution of the hook
-                        // Effectively: Turn hooks off for the current thread while the hook runs.
                         let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
                         let value_tmp = function.add_fresh_local(ty.inputs()[1]);
 
@@ -1114,22 +1102,13 @@ pub fn add_hooks(
                             Local(Tee, addr_tmp),
                             Local(Get, value_tmp),
                             instr,
-                            //Global(GlobalOp::Get, inside_hook_global.unwrap()),
-                            //If(FunctionType::new(&[], &[])),
-                            //Nop,
-                            //Else,
                             Local(Get, addr_tmp), // Return value and address are on the stack
                             Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
                             Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
                             Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
                             location.0,
                             location.1,
-                            //Const(Val::I32(1)),
-                            //Global(GlobalOp::Set, inside_hook_global.unwrap()),
                             Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
-                            //Const(Val::I32(0)),
-                            //Global(GlobalOp::Set, inside_hook_global.unwrap()),
-                            //End,
                         ]);
                     } else if enabled_hooks.contains(Hook::Store) {
                         let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
@@ -1214,7 +1193,20 @@ pub fn add_hooks(
                 Atomic(AtomicOp::Load(op), memarg) => {
                     let ty = op.to_type();
                     type_stack.instr(&ty);
-                    if enabled_hooks.contains(Hook::AtomicLoad) {
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        instrumented_body.extend_from_slice(&[
+                            Local(Tee, addr_tmp),
+                            instr, // Only return value is on the stack
+                            Local(Get, addr_tmp), // Return value and address are on the stack
+                            Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
+                            Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
+                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            location.0,
+                            location.1,
+                            Call(internal_hooks.get_read_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                        ]);
+                    } else if enabled_hooks.contains(Hook::AtomicLoad) {
                         let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
                         let value_tmp = function.add_fresh_local(ty.results()[0]);
 
@@ -1237,7 +1229,24 @@ pub fn add_hooks(
                 Atomic(AtomicOp::Store(op), memarg) => {
                     let ty = op.to_type();
                     type_stack.instr(&ty);
-                    if enabled_hooks.contains(Hook::AtomicStore) {
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        let value_tmp = function.add_fresh_local(ty.inputs()[1]);
+
+                        instrumented_body.extend_from_slice(&[
+                            Local(Set, value_tmp),
+                            Local(Tee, addr_tmp),
+                            Local(Get, value_tmp),
+                            instr,
+                            Local(Get, addr_tmp), // Return value and address are on the stack
+                            Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
+                            Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
+                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            location.0,
+                            location.1,
+                            Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                        ]);
+                    } else if enabled_hooks.contains(Hook::AtomicStore) {
                         let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
                         let value_tmp = function.add_fresh_local(ty.inputs()[1]);
 
@@ -1259,7 +1268,32 @@ pub fn add_hooks(
                 Atomic(AtomicOp::Rmw(op), memarg) => {
                     let ty = op.to_type();
                     type_stack.instr(&ty);
-                    if enabled_hooks.contains(Hook::AtomicRmw) {
+
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        let value_tmp = function.add_fresh_local(ty.inputs()[1]);
+
+                        instrumented_body.extend_from_slice(&[
+                            Local(Set, value_tmp),
+                            Local(Tee, addr_tmp),
+                            Local(Get, value_tmp),
+                            instr,
+                            Local(Get, addr_tmp), // Return value and address are on the stack
+                            Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
+                            Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
+                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            location.0.clone(),
+                            location.1.clone(),
+                            Call(internal_hooks.get_read_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                            Local(Get, addr_tmp), // Return value and address are on the stack
+                            Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
+                            Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
+                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            location.0,
+                            location.1,
+                            Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                        ]);
+                    } else if enabled_hooks.contains(Hook::AtomicRmw) {
                         let input_tmps = function.add_fresh_locals(ty.inputs());
                         let result_tmps = function.add_fresh_locals(ty.results());
                         save_stack_to_locals(&mut instrumented_body, &input_tmps);
@@ -1284,7 +1318,63 @@ pub fn add_hooks(
                 Atomic(AtomicOp::Cmpxchg(op), memarg) => {
                     let ty = op.to_type();
                     type_stack.instr(&ty);
-                    if enabled_hooks.contains(Hook::AtomicCmpxchg) {
+                    
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        use wasabi_wasm::AtomicCmpxchg;
+                        let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        let expected_tmp = function.add_fresh_local(ty.inputs()[1]);
+                        let replacement_tmp = function.add_fresh_local(ty.inputs()[2]);
+                        let returned_tmp = function.add_fresh_local(ty.results()[0]);
+
+                        instrumented_body.extend_from_slice(&[
+                            Local(Set, replacement_tmp),
+                            Local(Set, expected_tmp),
+                            Local(Tee, addr_tmp),
+                            Local(Get, expected_tmp),
+                            Local(Get, replacement_tmp),
+                            instr,
+                            Local(Get, addr_tmp), // Return value and address are on the stack
+                            Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
+                            Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
+                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            location.0.clone(),
+                            location.1.clone(),
+                            Call(internal_hooks.get_read_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                            Local(Tee, returned_tmp),
+                            Local(Get, returned_tmp), // Duplicate the return value as we need it to identify if we had a write operation
+                            Local(Get, expected_tmp)
+                        ]);
+
+                        match op {
+                            AtomicCmpxchg::I32AtomicRmwCmpxchg | 
+                            AtomicCmpxchg::I32AtomicRmw8CmpxchgU | 
+                            AtomicCmpxchg::I32AtomicRmw16CmpxchgU => {
+                                instrumented_body.extend_from_slice(&[
+                                    Binary(BinaryOp::I32Eq)
+                                ]);
+                            },
+                            AtomicCmpxchg::I64AtomicRmwCmpxchg |
+                            AtomicCmpxchg::I64AtomicRmw8CmpxchgU |
+                            AtomicCmpxchg::I64AtomicRmw16CmpxchgU |
+                            AtomicCmpxchg::I64AtomicRmw32CmpxchgU => {
+                                instrumented_body.extend_from_slice(&[
+                                    Binary(BinaryOp::I64Eq)
+                                ]);
+                            }
+                        }
+
+                        instrumented_body.extend_from_slice(&[
+                            If(FunctionType::empty()),
+                            Local(Get, addr_tmp), // Return value and address are on the stack
+                            Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
+                            Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
+                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            location.0,
+                            location.1,
+                            Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                            End
+                        ]);                        
+                    } else if enabled_hooks.contains(Hook::AtomicCmpxchg) {
                         let input_tmps = function.add_fresh_locals(ty.inputs());
                         let result_tmps = function.add_fresh_locals(ty.results());
                         save_stack_to_locals(&mut instrumented_body, &input_tmps);
