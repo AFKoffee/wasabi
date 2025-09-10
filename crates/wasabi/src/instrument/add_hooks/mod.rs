@@ -1065,7 +1065,7 @@ pub fn add_hooks(
                             Local(Get, addr_tmp), // Return value and address are on the stack
                             Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
                             Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
-                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            Const(Val::I32(op.get_memory_access_width() as i32)), // Return value, effective address and access width are on the stack
                             location.0,
                             location.1,
                             Call(internal_hooks.get_read_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
@@ -1105,7 +1105,7 @@ pub fn add_hooks(
                             Local(Get, addr_tmp), // Return value and address are on the stack
                             Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
                             Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
-                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            Const(Val::I32(op.get_memory_access_width() as i32)), // Return value, effective address and access width are on the stack
                             location.0,
                             location.1,
                             Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
@@ -1201,7 +1201,7 @@ pub fn add_hooks(
                             Local(Get, addr_tmp), // Return value and address are on the stack
                             Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
                             Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
-                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            Const(Val::I32(op.get_memory_access_width() as i32)), // Return value, effective address and access width are on the stack
                             location.0,
                             location.1,
                             Call(internal_hooks.get_read_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
@@ -1241,7 +1241,7 @@ pub fn add_hooks(
                             Local(Get, addr_tmp), // Return value and address are on the stack
                             Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
                             Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
-                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            Const(Val::I32(op.get_memory_access_width() as i32)), // Return value, effective address and access width are on the stack
                             location.0,
                             location.1,
                             Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
@@ -1281,14 +1281,14 @@ pub fn add_hooks(
                             Local(Get, addr_tmp), // Return value and address are on the stack
                             Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
                             Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
-                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            Const(Val::I32(op.get_memory_access_width() as i32)), // Return value, effective address and access width are on the stack
                             location.0.clone(),
                             location.1.clone(),
                             Call(internal_hooks.get_read_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
                             Local(Get, addr_tmp), // Return value and address are on the stack
                             Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
                             Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
-                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            Const(Val::I32(op.get_memory_access_width() as i32)), // Return value, effective address and access width are on the stack
                             location.0,
                             location.1,
                             Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
@@ -1336,7 +1336,7 @@ pub fn add_hooks(
                             Local(Get, addr_tmp), // Return value and address are on the stack
                             Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
                             Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
-                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            Const(Val::I32(op.get_memory_access_width() as i32)), // Return value, effective address and access width are on the stack
                             location.0.clone(),
                             location.1.clone(),
                             Call(internal_hooks.get_read_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
@@ -1368,7 +1368,7 @@ pub fn add_hooks(
                             Local(Get, addr_tmp), // Return value and address are on the stack
                             Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
                             Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
-                            Const(Val::I32(memarg.alignment_exp as i32)), // Return value, effective address and alignment are on the stack
+                            Const(Val::I32(op.get_memory_access_width() as i32)), // Return value, effective address and access width are on the stack
                             location.0,
                             location.1,
                             Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)

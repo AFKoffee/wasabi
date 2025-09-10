@@ -1326,6 +1326,15 @@ pub trait MemoryOp: Sized + Copy {
     fn natural_alignment(self) -> u32 {
         2u32.pow(self.natural_alignment_exp() as u32)
     }
+
+    /// Returns the number of bytes accessed in linear memory by this instruction
+    /// 
+    /// This is just a convenience function redirecting to [`MemoryOp::natural_alignment`]
+    /// because the natural alignment is defined as the storage size of the respective
+    /// memory access: https://webassembly.github.io/spec/core/text/instructions.html#memory-instructions
+    fn get_memory_access_width(self) -> u32 {
+        self.natural_alignment()
+    }
 }
 
 impl MemoryOp for LoadOp {
