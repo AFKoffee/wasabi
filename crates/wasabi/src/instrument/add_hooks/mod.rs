@@ -1023,7 +1023,25 @@ pub fn add_hooks(
                 MemoryFill  => {
                     let ty = instr.simple_type().unwrap();
                     type_stack.instr(&ty);
-                    if enabled_hooks.contains(Hook::MemoryFill) {
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        let dst_addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        let byte_value_tmp = function.add_fresh_local(ty.inputs()[1]);
+                        let n_bytes_tmp = function.add_fresh_local(ty.inputs()[2]);
+
+                        instrumented_body.extend_from_slice(&[
+                            Local(Set, n_bytes_tmp),
+                            Local(Set, byte_value_tmp),
+                            Local(Tee, dst_addr_tmp),
+                            Local(Get, byte_value_tmp),
+                            Local(Get, n_bytes_tmp),
+                            instr,
+                            Local(Get, dst_addr_tmp), // Return value and destination address are on the stack
+                            Local(Get, n_bytes_tmp), // Return value, destination address and access width are on the stack
+                            location.0.clone(),
+                            location.1.clone(),
+                            Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                        ]);
+                    } else if enabled_hooks.contains(Hook::MemoryFill) {
                         setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
                         instrumented_body.push(hooks.instr(&instr, &[]));
                     } else {
@@ -1033,7 +1051,30 @@ pub fn add_hooks(
                 MemoryCopy => {
                     let ty = instr.simple_type().unwrap();
                     type_stack.instr(&ty);
-                    if enabled_hooks.contains(Hook::MemoryCopy) {
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        let dst_addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        let src_addr_tmp = function.add_fresh_local(ty.inputs()[1]);
+                        let n_bytes_tmp = function.add_fresh_local(ty.inputs()[2]);
+
+                        instrumented_body.extend_from_slice(&[
+                            Local(Set, n_bytes_tmp),
+                            Local(Set, src_addr_tmp),
+                            Local(Tee, dst_addr_tmp),
+                            Local(Get, src_addr_tmp),
+                            Local(Get, n_bytes_tmp),
+                            instr,
+                            Local(Get, src_addr_tmp), // Return value and source address are on the stack
+                            Local(Get, n_bytes_tmp), // Return value, source address and access width are on the stack
+                            location.0.clone(),
+                            location.1.clone(),
+                            Call(internal_hooks.get_read_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                            Local(Get, dst_addr_tmp), // Return value and destination address are on the stack
+                            Local(Get, n_bytes_tmp), // Return value, destination address and access width are on the stack
+                            location.0.clone(),
+                            location.1.clone(),
+                            Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                        ]);
+                    } else if enabled_hooks.contains(Hook::MemoryCopy) {
                         setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
                         instrumented_body.push(hooks.instr(&instr, &[]));
                     } else {
@@ -1043,7 +1084,25 @@ pub fn add_hooks(
                 MemoryInit(_) => {
                     let ty = instr.simple_type().unwrap();
                     type_stack.instr(&ty);
-                    if enabled_hooks.contains(Hook::MemoryInit) {
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        let dst_addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        let data_offset_tmp = function.add_fresh_local(ty.inputs()[1]);
+                        let n_bytes_tmp = function.add_fresh_local(ty.inputs()[2]);
+
+                        instrumented_body.extend_from_slice(&[
+                            Local(Set, n_bytes_tmp),
+                            Local(Set, data_offset_tmp),
+                            Local(Tee, dst_addr_tmp),
+                            Local(Get, data_offset_tmp),
+                            Local(Get, n_bytes_tmp),
+                            instr,
+                            Local(Get, dst_addr_tmp), // Return value and destination address are on the stack
+                            Local(Get, n_bytes_tmp), // Return value, destination address and access width are on the stack
+                            location.0.clone(),
+                            location.1.clone(),
+                            Call(internal_hooks.get_write_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                        ]);
+                    } else if enabled_hooks.contains(Hook::MemoryInit) {
                         setup_instrument(function, ty, &mut instrumented_body, &instr, &location);
                         instrumented_body.push(hooks.instr(&instr, &[]));
                     } else {
@@ -1132,8 +1191,27 @@ pub fn add_hooks(
                 Atomic(AtomicOp::Wait(op), memarg) => {
                     let ty = op.to_type();
                     type_stack.instr(&ty);
-                    // Note: The AtomicWait hook is called BEFORE the original instruction
-                    if enabled_hooks.contains(Hook::AtomicWait) {
+                    // Note: The atomic wait hooks are called BEFORE the original instruction
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        let expected_tmp = function.add_fresh_local(ty.inputs()[1]);
+                        let timeout_tmp = function.add_fresh_local(ty.inputs()[2]);
+                        instrumented_body.extend_from_slice(&[
+                            Local(Set, timeout_tmp),
+                            Local(Set, expected_tmp),
+                            Local(Tee, addr_tmp),
+                            Const(Val::I32(memarg.offset as i32)), // Address and offset are on the stack
+                            Binary(BinaryOp::I32Add), // Effective address is on the stack
+                            Const(Val::I32(op.get_memory_access_width() as i32)), // Effective address and access width are on the stack
+                            location.0,
+                            location.1,
+                            Call(internal_hooks.get_read_event_hook().into()), // Nothing is on the stack (hook has 4 arguments)
+                            Local(Get, addr_tmp), // Address is on the stack
+                            Local(Get, expected_tmp), // Address and expected value are on the stack
+                            Local(Get, timeout_tmp), // All original instruction parameters are on the stack
+                            instr, // Only return value is on the stack
+                        ]);
+                    } else if enabled_hooks.contains(Hook::AtomicWait) {
                         let input_tmps = function.add_fresh_locals(ty.inputs());
 
                         // copy stack values into locals
@@ -1168,7 +1246,26 @@ pub fn add_hooks(
                 Atomic(AtomicOp::Notify(op), memarg) => {
                     let ty = op.to_type();
                     type_stack.instr(&ty);
-                    if enabled_hooks.contains(Hook::AtomicNotify) {
+                    if enabled_hooks.contains(Hook::DeadlockDetection) {
+                        // The threads proposal does not state exactuly if the notify operator
+                        // reads from the given address, but we will count it as a read access 
+                        // just to be sure
+                        let addr_tmp = function.add_fresh_local(ty.inputs()[0]);
+                        let count_tmp = function.add_fresh_local(ty.inputs()[1]);
+                        instrumented_body.extend_from_slice(&[
+                            Local(Set, count_tmp),
+                            Local(Tee, addr_tmp),
+                            Local(Get, count_tmp),
+                            instr,
+                            Local(Get, addr_tmp), // Return value and address are on the stack
+                            Const(Val::I32(memarg.offset as i32)), // Return value, address and offset are on the stack
+                            Binary(BinaryOp::I32Add), // Return value and effective address are on the stack
+                            Const(Val::I32(op.get_memory_access_width() as i32)), // Return value, effective address and access width are on the stack
+                            location.0,
+                            location.1,
+                            Call(internal_hooks.get_read_event_hook().into()), // Only return value is on the stack (hook has 4 arguments)
+                        ]);
+                    } else if enabled_hooks.contains(Hook::AtomicNotify) {
                         let input_tmps = function.add_fresh_locals(ty.inputs());
                         let result_tmps = function.add_fresh_locals(ty.results());
                         save_stack_to_locals(&mut instrumented_body, &input_tmps);
