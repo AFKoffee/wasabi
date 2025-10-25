@@ -38,13 +38,13 @@ mod static_info;
 pub mod type_stack;
 
 struct InternalHooks {
-    clone_instance: usize,
-    start_lock: usize,
-    finish_lock: usize,
-    start_unlock: usize,
-    finish_unlock: usize,
-    spawn_thread: usize,
-    join_thread: usize,
+    clone_instance: Option<usize>,
+    start_lock: Option<usize>,
+    finish_lock: Option<usize>,
+    start_unlock: Option<usize>,
+    finish_unlock: Option<usize>,
+    spawn_thread: Option<usize>,
+    join_thread: Option<usize>,
     read_hook: usize,
     write_hook: usize,
 }
@@ -56,13 +56,13 @@ impl InternalHooks {
         location: &(Instr, Instr),
     ) {
         let fidx = target_func_idx.to_usize();
-        if fidx == self.clone_instance
-            || fidx == self.join_thread
-            || fidx == self.spawn_thread
-            || fidx == self.finish_unlock
-            || fidx == self.start_unlock
-            || fidx == self.finish_lock
-            || fidx == self.start_lock
+        if self.clone_instance.map(|idx| idx == fidx).unwrap_or(false)
+            || self.join_thread.map(|idx| idx == fidx).unwrap_or(false)
+            || self.spawn_thread.map(|idx| idx == fidx).unwrap_or(false)
+            || self.finish_unlock.map(|idx| idx == fidx).unwrap_or(false)
+            || self.start_unlock.map(|idx| idx == fidx).unwrap_or(false)
+            || self.finish_lock.map(|idx| idx == fidx).unwrap_or(false)
+            || self.start_lock.map(|idx| idx == fidx).unwrap_or(false)
         {
             instrumented_body.extend_from_slice(&[location.0.clone(), location.1.clone()]);
         }
@@ -144,27 +144,13 @@ impl InternalHookBuilder {
 
     fn build(self) -> InternalHooks {
         InternalHooks {
-            clone_instance: self
-                .clone_instance
-                .expect("internal clone_instance hook is missing!"),
-            start_lock: self
-                .start_lock
-                .expect("internal start_lock hook is missing!"),
-            finish_lock: self
-                .finish_lock
-                .expect("internal finish_lock hook is missing!"),
-            start_unlock: self
-                .start_unlock
-                .expect("internal start_unlock hook is missing!"),
-            finish_unlock: self
-                .finish_unlock
-                .expect("internal finish_unlock hook is missing!"),
-            spawn_thread: self
-                .spawn_thread
-                .expect("internal spawn_thread hook is missing!"),
-            join_thread: self
-                .join_thread
-                .expect("internal join_thread hook is missing!"),
+            clone_instance: self.clone_instance,
+            start_lock: self.start_lock,
+            finish_lock: self.finish_lock,
+            start_unlock: self.start_unlock,
+            finish_unlock: self.finish_unlock,
+            spawn_thread: self.spawn_thread,
+            join_thread: self.join_thread,
             read_hook: self
                 .read_hook
                 .expect("internal read_hook function is missing!"),
