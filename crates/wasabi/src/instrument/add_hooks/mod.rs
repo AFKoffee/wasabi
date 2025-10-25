@@ -38,6 +38,7 @@ mod static_info;
 pub mod type_stack;
 
 struct InternalHooks {
+    clone_instance: usize,
     start_lock: usize,
     finish_lock: usize,
     start_unlock: usize,
@@ -46,33 +47,29 @@ struct InternalHooks {
     join_thread: usize,
     read_hook: usize,
     write_hook: usize,
-    /*aquire_event: usize,
-    request_event: usize,
-    release_event: usize,
-    fork_event: usize,
-    join_event: usize,*/
-    //wbg_start: usize,
 }
 impl InternalHooks {
-    fn patch_call_if_needed(&self, instrumented_body: &mut Vec<Instr>, target_func_idx: Idx<Function>, location: &(Instr, Instr)) {
+    fn patch_call_if_needed(
+        &self,
+        instrumented_body: &mut Vec<Instr>,
+        target_func_idx: Idx<Function>,
+        location: &(Instr, Instr),
+    ) {
         let fidx = target_func_idx.to_usize();
-        if 
-            fidx == self.join_thread || 
-            fidx == self.spawn_thread || 
-            fidx == self.finish_unlock || 
-            fidx == self.start_unlock ||
-            fidx == self.finish_lock ||
-            fidx == self.start_lock
+        if fidx == self.clone_instance
+            || fidx == self.join_thread
+            || fidx == self.spawn_thread
+            || fidx == self.finish_unlock
+            || fidx == self.start_unlock
+            || fidx == self.finish_lock
+            || fidx == self.start_lock
         {
-            instrumented_body.extend_from_slice(&[
-                location.0.clone(),
-                location.1.clone(),
-            ]);
+            instrumented_body.extend_from_slice(&[location.0.clone(), location.1.clone()]);
         }
 
         instrumented_body.push(Call(target_func_idx));
     }
-    
+
     fn get_read_event_hook(&self) -> usize {
         self.read_hook
     }
@@ -80,23 +77,10 @@ impl InternalHooks {
     fn get_write_event_hook(&self) -> usize {
         self.write_hook
     }
-
-    /*fn is_hook(&self, fidx: usize) -> bool {
-        fidx == self.read_event ||
-        fidx == self.write_event ||
-        fidx == self.aquire_event ||
-        fidx == self.request_event ||
-        fidx == self.release_event ||
-        fidx == self.fork_event ||
-        fidx == self.join_event
-    }*/
-    
-    /*fn get_wbg_start(&self) -> usize {
-        self.wbg_start
-    }*/
 }
 
 struct InternalHookBuilder {
+    clone_instance: Option<usize>,
     start_lock: Option<usize>,
     finish_lock: Option<usize>,
     start_unlock: Option<usize>,
@@ -105,32 +89,25 @@ struct InternalHookBuilder {
     join_thread: Option<usize>,
     read_hook: Option<usize>,
     write_hook: Option<usize>,
-    /*aquire_event: Option<usize>,
-    request_event: Option<usize>,
-    release_event: Option<usize>,
-    fork_event: Option<usize>,
-    join_event: Option<usize>,*/
-//    wbg_start: Option<usize>,
 }
 
 impl InternalHookBuilder {
     fn new() -> Self {
-        Self { 
-            start_lock: None, 
-            finish_lock: None, 
-            start_unlock: None, 
-            finish_unlock: None, 
-            spawn_thread: None, 
-            join_thread: None, 
-            read_hook: None, 
-            write_hook: None, 
-            /*aquire_event: None, 
-            request_event: None, 
-            release_event: None, 
-            fork_event: None, 
-            join_event: None,*/
-//            wbg_start: None,
+        Self {
+            clone_instance: None,
+            start_lock: None,
+            finish_lock: None,
+            start_unlock: None,
+            finish_unlock: None,
+            spawn_thread: None,
+            join_thread: None,
+            read_hook: None,
+            write_hook: None,
         }
+    }
+
+    fn with_clone_instance(&mut self, fidx: usize) {
+        self.clone_instance = Some(fidx)
     }
 
     fn with_start_lock(&mut self, fidx: usize) {
@@ -165,47 +142,35 @@ impl InternalHookBuilder {
         self.write_hook = Some(fidx)
     }
 
-    /*
-    fn with_aquire_event(&mut self, fidx: usize) {
-        self.aquire_event = Some(fidx)
-    }
-
-    fn with_request_event(&mut self, fidx: usize) {
-        self.request_event = Some(fidx)
-    }
-
-    fn with_release_event(&mut self, fidx: usize) {
-        self.release_event = Some(fidx)
-    }
-
-    fn with_fork_event(&mut self, fidx: usize) {
-        self.fork_event = Some(fidx)
-    }
-
-    fn with_join_event(&mut self, fidx: usize) {
-        self.join_event = Some(fidx)
-    }*/
-
-    /*fn with_wbg_start(&mut self, fidx: usize) {
-        self.wbg_start = Some(fidx)
-    }*/
-
     fn build(self) -> InternalHooks {
-        InternalHooks { 
-            start_lock: self.start_lock.expect("internal start_lock hook is missing!"), 
-            finish_lock: self.finish_lock.expect("internal finish_lock hook is missing!"), 
-            start_unlock: self.start_unlock.expect("internal start_unlock hook is missing!"), 
-            finish_unlock: self.finish_unlock.expect("internal finish_unlock hook is missing!"), 
-            spawn_thread: self.spawn_thread.expect("internal spawn_thread hook is missing!"), 
-            join_thread: self.join_thread.expect("internal join_thread hook is missing!"), 
-            read_hook: self.read_hook.expect("internal read_hook function is missing!"), 
-            write_hook: self.write_hook.expect("internal write_hook function is missing!"), 
-            /*aquire_event: self.aquire_event.expect("internal aquire_event function is missing!"), 
-            request_event: self.request_event.expect("internal request_event function is missing!"), 
-            release_event: self.release_event.expect("internal release_event function is missing!"), 
-            fork_event: self.fork_event.expect("internal fork_event function is missing!"), 
-            join_event: self.join_event.expect("internal join_event function is missing!"),*/
-//            wbg_start: self.wbg_start.expect("wasm-bindgen start function is missing!")
+        InternalHooks {
+            clone_instance: self
+                .clone_instance
+                .expect("internal clone_instance hook is missing!"),
+            start_lock: self
+                .start_lock
+                .expect("internal start_lock hook is missing!"),
+            finish_lock: self
+                .finish_lock
+                .expect("internal finish_lock hook is missing!"),
+            start_unlock: self
+                .start_unlock
+                .expect("internal start_unlock hook is missing!"),
+            finish_unlock: self
+                .finish_unlock
+                .expect("internal finish_unlock hook is missing!"),
+            spawn_thread: self
+                .spawn_thread
+                .expect("internal spawn_thread hook is missing!"),
+            join_thread: self
+                .join_thread
+                .expect("internal join_thread hook is missing!"),
+            read_hook: self
+                .read_hook
+                .expect("internal read_hook function is missing!"),
+            write_hook: self
+                .write_hook
+                .expect("internal write_hook function is missing!"),
         }
     }
 }
@@ -243,34 +208,29 @@ pub fn add_hooks(
         None
     };
 
-    /*let inside_hook_global = if enabled_hooks.contains(Hook::DeadlockDetection) {
-        Some(module.add_global(I32, Mutability::Mut, vec![Const(Val::I32(1)), End]))
-    } else {
-        None
-    };*/
-
     let mut hook_builder = InternalHookBuilder::new();
     let mut events = Vec::new();
     for (fidx, f) in module.functions.iter().enumerate() {
         if let Some((fmodule, fname)) = f.import() {
-            if fmodule != "wasm_threadlink" { continue; }
-            // TODO: Check for correct function types
-            match fname {
-                "start_lock" => hook_builder.with_start_lock(fidx),
-                "finish_lock" => hook_builder.with_finish_lock(fidx),
-                "start_unlock" => hook_builder.with_start_unlock(fidx),
-                "finish_unlock" => hook_builder.with_finish_unlock(fidx),
-                "thread_create" => hook_builder.with_spawn_thread(fidx),
-                "thread_join" => hook_builder.with_join_thread(fidx),
-                /*"read_hook" => hook_builder.with_read_event(fidx),
-                "write_hook" => hook_builder.with_write_event(fidx),
-                "aquire_hook" => hook_builder.with_aquire_event(fidx),
-                "request_hook" => hook_builder.with_request_event(fidx),
-                "release_hook" => hook_builder.with_release_event(fidx),
-                "fork_hook" => hook_builder.with_fork_event(fidx),
-                "join_hook" => hook_builder.with_join_event(fidx),*/
-//                "__wbindgen_start" => hook_builder.with_wbg_start(fidx),
-                _ => continue
+            if fmodule == "wasmgrind_standalone" {
+                // TODO: Check for correct function types
+                match fname {
+                    "clone_instance" => hook_builder.with_clone_instance(fidx),
+                    _ => continue,
+                }
+            } else if fmodule == "wasmgrind_tracing" {
+                // TODO: Check for correct function types
+                match fname {
+                    "start_lock" => hook_builder.with_start_lock(fidx),
+                    "finish_lock" => hook_builder.with_finish_lock(fidx),
+                    "start_unlock" => hook_builder.with_start_unlock(fidx),
+                    "finish_unlock" => hook_builder.with_finish_unlock(fidx),
+                    "thread_create" => hook_builder.with_spawn_thread(fidx),
+                    "thread_join" => hook_builder.with_join_thread(fidx),
+                    _ => continue,
+                }
+            } else {
+                continue;
             }
 
             events.push(fidx);
@@ -281,26 +241,32 @@ pub fn add_hooks(
         let func = module.function_mut(fidx.into());
         let old_type = func.type_;
         func.type_ = FunctionType::new(
-            &[old_type.inputs(), &[ValType::I32, ValType::I32]].concat(), 
-            old_type.results()
+            &[old_type.inputs(), &[ValType::I32, ValType::I32]].concat(),
+            old_type.results(),
         )
     }
 
     let read_hook = Function::new_imported(
-        FunctionType::new(&[ValType::I32, ValType::I32, ValType::I32, ValType::I32], &[]), 
-        "wasabi".into(), 
-        "read_hook".into(), 
-        Vec::new()
+        FunctionType::new(
+            &[ValType::I32, ValType::I32, ValType::I32, ValType::I32],
+            &[],
+        ),
+        "wasabi".into(),
+        "read_hook".into(),
+        Vec::new(),
     );
 
     hook_builder.with_read_hook(module.functions.len());
     module.functions.push(read_hook);
 
     let write_hook = Function::new_imported(
-        FunctionType::new(&[ValType::I32, ValType::I32, ValType::I32, ValType::I32], &[]), 
-        "wasabi".into(), 
-        "write_hook".into(), 
-        Vec::new()
+        FunctionType::new(
+            &[ValType::I32, ValType::I32, ValType::I32, ValType::I32],
+            &[],
+        ),
+        "wasabi".into(),
+        "write_hook".into(),
+        Vec::new(),
     );
 
     hook_builder.with_write_hook(module.functions.len());
